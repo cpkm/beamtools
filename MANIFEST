@@ -7,3 +7,4 @@ beamtools/diffraction_grating_pair.py
 beamtools/knifeedgeanalysis.py
 beamtools/sellmeier_dispersion.py
 beamtools/spectrum_integrate.py
+beamtools/tests.py
