@@ -7,7 +7,7 @@ setup(
   author = 'Kyle Manchee',
   author_email = 'cpkmanchee@gmail.com',
   url = 'https://github.com/kikimaroca/beamtools',
-  download_url = 'https://github.com/kikimaroca/beamtools/archive/0.1.tar.gz',
+  download_url = 'https://github.com/kikimaroca/beamtools/archive/v0.1.tar.gz',
   keywords = ['optics', 'analysis', 'beams', 'spectrum'],
   classifiers = [],
 )
