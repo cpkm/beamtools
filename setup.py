@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'beamtools',
   packages = ['beamtools'], # this must be the same as the name above
-  version = '0.1',
+  version = '0.2',
   description = 'A suite of tools for analysis optical beams',
   author = 'Kyle Manchee',
   author_email = 'cpkmanchee@gmail.com',
