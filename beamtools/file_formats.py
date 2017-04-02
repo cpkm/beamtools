@@ -8,13 +8,14 @@ Creates a dictionary of file formats and exports the dictionary using pickle.
 The .pkl file can be imported and used by other modules.
 
 """
-
+'''
 import csv
 import pickle
 
 import os
 
 path = os.path.dirname((os.path.abspath(__file__)))
+'''
 
 file_formats = {'bt_regen_monitor': 
                 {'alias': ['regen_monitor','regen','monitor','mon'],
@@ -60,6 +61,7 @@ file_formats = {'bt_regen_monitor':
 
             }
 
-
+'''
 with open(os.path.join(path,'file_formats.pkl'), 'wb') as f:
-    pickle.dump(file_formats,f)
+    pickle.dump(file_formats,f,protocol=pickle.HIGHEST_PROTOCOL)
+'''

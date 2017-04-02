@@ -6,61 +6,14 @@ Created on Wed Nov 23 09:32:19 2016
 """
 
 import numpy as np
-import scipy as sp
-import matplotlib.pyplot as plt
 import os
 import csv
 import pickle
 
+from beamtools.common import file_formats
 
-file_format = {'regen_monitor': 
-                {'alias': ['regen_monitor','regen','monitor','mon'],
-                 'header_lines': 9,
-                 'number_data_columns': 6,
-                 'column_labels': ['time','current','power','crossover','t2','t2'],
-                 'column_units': ['', 'A','W','ratio','degC','degC'],
-                 'delimiter': '\t',
-                 },
-            'thorlabs_pm': 
-                {'alias': ['thorlabs_pm','thor','thorlabs','pm100','pm'],
-                 'header_lines': 3,
-                 'number_data_columns': 3,
-                 'column_labels': ['time','power','units'],
-                 'column_units': ['mm', 'W', ''],
-                 'delimiter': '\t',
-                 },
-            'ocean_optics_spectrometer':
-                {'alias': ['ocean_optics_spectrometer','oo_spectrometer','oospec','oo_spec','oo'],
-                 'header_lines': 0,
-                 'number_data_columns': 2,
-                 'column_labels': ['wavelength','intensity'],
-                 'column_units': ['nm', 'units'],
-                 'delimiter': ',',
-                 },
-            'autocorrelator': 
-                {'alias':['autocorrelator','ac','auto_correlator','auto'],
-                 'header_lines': 0,
-                 'number_data_columns': 2,
-                 'column_labels': ['position','power'],
-                 'column_units': ['mm', 'W'],
-                 'delimiter': '\t',
-                 }
+__all__ = ['']
 
-            }
-
-
-
-#w = csv.writer(open("file_formats.csv", "w"))
-#for key, val in file_formats.items():
-#    w.writerow([key, val]) 
-with open('file_format.pkl', 'wb') as f:
-    pickle.dump(file_format,f)
-quit()
-file_formats = {}
-for key, val in csv.reader(open("file_formats.csv")):
-    file_formats[key] = val 
-
-print(file_formats)               
                 
 def filetype_lookup(file_dict, given_type):
     '''Identify file type for given input. Only first found match is returned.
@@ -68,8 +21,9 @@ def filetype_lookup(file_dict, given_type):
     for k,v in file_dict.items():
         if given_type in file_dict.get(k).get('alias'):
             return(k)
-        else:
-            return(None)
+        
+    raise RuntimeError('File type lookup failed. File type "%s" not found' %(given_type))
+    return(None)
 
 
 filedir = '/Users/cpkmanchee/Google Drive/PhD/Data/2016-11-22 DILAS temp profile'
@@ -79,10 +33,7 @@ filePOW = '2016-11-22 PM100 temperature profile 10W.txt'
 file = os.path.join(filedir,fileMON)
 given_filetype = 'monitor'
 
-filetype = filetype_lookup(file_formats,given_filetype)
-if filetype is None:
-    raise RuntimeError("File type lookup failed. File type not found") from filetype
-
+filetype = filetype_lookup(file_formats,given_filetype.lower())
 
 header_lines = file_formats.get(filetype).get('header_lines')
 delimiter = file_formats.get(filetype).get('delimiter')
