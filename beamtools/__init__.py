@@ -1,1 +1,2 @@
-from tests import h,c,energy,freq
+#from .tests import energy,freq
+#from .common import *

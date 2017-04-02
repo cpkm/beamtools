@@ -1,9 +1,11 @@
-from distutils.core import setup
+#from distutils.core import setup
+from setuptools import setup
 setup(
   name = 'beamtools',
   packages = ['beamtools'], # this must be the same as the name above
   version = '0.2',
-  description = 'A suite of tools for analysis optical beams',
+  platforms=['any'],
+  description = 'A suite of tools for the analysis of optical beams',
   author = 'Kyle Manchee',
   author_email = 'cpkmanchee@gmail.com',
   url = 'https://github.com/kikimaroca/beamtools',
