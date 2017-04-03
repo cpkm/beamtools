@@ -12,7 +12,7 @@ import pickle
 
 from beamtools.file_formats import file_formats
 
-__all__ = ['']
+__all__ = ['import_data_file']
 
 class objdict(dict):
     def __init__(self,d):
@@ -56,6 +56,7 @@ def import_data_file(file, given_filetype):
 
     return output_obj
 
+'''
 filedir = '/Users/cpkmanchee/Google Drive/PhD/Data/2016-11-22 DILAS temp profile'
 fileMON = '2016-11-22 MON temperature profile 10W.txt'
 filePOW = '2016-11-22 PM100 temperature profile 10W.txt'
@@ -65,6 +66,6 @@ file_type = 'monitor'
 
 data = import_data_file(file,file_type)
 print(data.time[0])
-
+'''
 
 

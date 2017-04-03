@@ -8,13 +8,11 @@ Dispersioon calculation from Sellmeier eqn
 """
 
 import numpy as np
-import scipy as sp
-import matplotlib.pyplot as plt
 import sympy as sym
+
 from sympy.plotting import plot as symplot
 
-h = 6.62606957E-34  #J*s
-c = 299792458.0     #m/s
+from beamtools.constants import h,c
 
 l0 = 1.03E-6
 w0 = 2*np.pi*c/l0

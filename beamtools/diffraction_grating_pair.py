@@ -7,12 +7,6 @@ Created on Wed Oct 19 11:02:23 2016
 Notes:
 
 Diffraction grating pair
-"""
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-'''
 Simulate grating pair
 pulse = input pulse object
 L = grating separation (m), use (-) L for stretcher, (+) L for compressor geometry
@@ -23,13 +17,16 @@ theta = diffraction angle (assumed 1 order, as is standard)
 d = groove spacing
 
 EVERYTHING IS FOR 1st order
-'''
+"""
 
-#constants
-h = 6.62606957E-34  #J*s
-c = 299792458.0     #m/s
+import numpy as np
+import matplotlib.pyplot as plt
+
+from beamtools.constants import h,c
+
 
 def gdd2len(GDD, N, AOI, lambda0):
+    '''Calculate separation length from total GDD, for given grating'''
     m = 1
     g = AOI*np.pi/180    #convert AOI into rad
     d = 1E-3/N    #gives grove spacing in m
@@ -44,6 +41,7 @@ def gdd2len(GDD, N, AOI, lambda0):
     return L, L_real
     
 def beta2(N, AOI, lambda0):
+    '''Calculate dispersion paramter, beta2, for given grating'''
     m = 1
     g = AOI*np.pi/180    #convert AOI into rad
     d = 1E-3/N    #gives grove spacing in m
@@ -57,6 +55,7 @@ def beta2(N, AOI, lambda0):
     
 
 def dispersion_coefs(L, N, AOI, lambda0):
+    '''Calculate grating dispersion coefficients from grating specs'''
     m = 1
     g = AOI*np.pi/180    #convert AOI into rad
     d = 1E-3/N    #gives grove spacing in m
@@ -74,6 +73,7 @@ def dispersion_coefs(L, N, AOI, lambda0):
     
 
 def diffraction_angle(N, AOI, lambda0):
+    '''Calculate angle of diffraction for given grating and AOI'''
     m = 1
     g = AOI*np.pi/180    #convert AOI into rad
     d = 1E-3/N    #gives grove spacing in m
@@ -83,17 +83,18 @@ def diffraction_angle(N, AOI, lambda0):
     
     return theta*180/np.pi
     
+
 def transverse_beam_size(GDD, N, AOI, lambda0, dlambda):
-    
+    '''Calculate maximum transverse beam size at second grating of pair'''
     L, L_real = gdd2len(GDD, N, AOI, lambda0)
     dth = np.abs(diffAngle(N, AOI, lambda0 + dlambda/2) - diffAngle(N, AOI, lambda0-dlambda/2))
-    
     dxMax = 2*L_real*np.arctan(dth*np.pi/(2*180))
     
     return dxMax
     
-def littrow_angle(N, lambda0):
     
+def littrow_angle(N, lambda0):
+    '''Calculate Littrow angle for grating'''
     d = 1E-3/N
     a = (180/np.pi)*np.arcsin(lambda0/(2*d))
     
