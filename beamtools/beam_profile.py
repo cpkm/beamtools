@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Aug  3 11:31:57 2016
+Created on Wed Aug 3 11:31:57 2016
 
 @author: cpkmanchee
 
@@ -67,42 +67,7 @@ def gaussian2D(xy_meshgrid,x0,y0,sigx,sigy,amp,const,theta=0):
     return g.ravel()
 
 
-def fitgaussian2D(data, xy_tuple, rot=None):
-    '''
-    fits data to 2D gaussian function
-
-    Inputs:
-        data = 2D array of image data
-        xy_tuple = x and y data as a tuple. each is a meshgrid
-        rot = enable rotation, default is None, if anything else rotation is allowed
-    
-    Outputs:
-        popt, pcov = optimized parameters and covarience matrix
-            popt = [x0,y0,sigx,sigy,amp,const,*theta], *theta not included if rot=None
-    '''
-
-    data = data.astype(float)
-
-    x = xy_tuple[0]
-    y = xy_tuple[1]
-    
-    ind0 = np.unravel_index(data.argmax(), data.shape)   
-    x0 = x[ind0]
-    y0 = y[ind0]
-    sigx = x.max()/(2*4)
-    sigy = y.max()/(2*4)
-    
-    p0 = [x0,y0,sigx,sigy,data.max(),0]
-
-    if rot is not None:
-        p0 += [0]
-    
-    popt,pcov = opt.curve_fit(gaussian2D,(x,y),data.ravel(),p0)
-    
-    return popt,pcov
-    
-
-def gaussianbeamwaist(z,z0,d0,M2=1,const=0,wl=1.030):
+def gaussian_beamwaist(z,z0,d0,M2=1,const=0,wl=1.030):
     '''
     generate gaussian beam profile w(z)
 
@@ -135,35 +100,43 @@ def gaussianbeamwaist(z,z0,d0,M2=1,const=0,wl=1.030):
 
     return w
 
+
 def fitM2(dz, z, wl=1.03E-6):
-    '''
-    z in mm
-    dz, beamwidth in um
+    '''Fit series of beamwaists to gaussian beamwaist. 
+    Follows ISO standard 11146 for fitting.
 
-    '''
+    Returns gaussian beam paramters with uncertainties.
 
+    Inputs:
+        z, position aling optical axis in mm
+        dz, beamwidth in um, = 2*w, i.e. dz is beam diameter
+        wl, (optional) wavelength, default = 1030nm
+
+    a,b, and c are fit parameters
+
+    Outputs:
+        z0,d0,M2,theta,zR and associated uncertainties.
+    '''
     dz = dz*1E-6
     z = z*1E-3
     
+    #initial paramters for fit
     di = np.min(dz)
     zi = z[np.argmin(dz)]
-    
     ci = (wl/(np.pi*di))**2
     bi = -2*zi*ci
     ai = di**2 + ci*zi**2
     
+    #fit limits
     c_lim = np.array([0, np.inf])
     b_lim = np.array([-np.inf,np.inf])
     a_lim = np.array([0, np.inf])
 
     p0 = [ai, bi, ci]
-    #limits = (-np.inf,np.inf)
     limits = ([i.min() for i in [a_lim,b_lim,c_lim]],  [i.max() for i in [a_lim,b_lim,c_lim]])
 
-    f = lambda z,a,b,c: (a + b*z + c*z**2)**(1/2)
-        
+    f = lambda z,a,b,c: (a + b*z + c*z**2)**(1/2) 
     popt,pcov = opt.curve_fit(f,z,dz,p0,bounds=limits)
-    
     [a,b,c] = [un.ufloat(popt[i], np.sqrt(pcov[i,i])) for i in range(3)]
 
     z0 = (1E3)*(-b/(2*c))
@@ -286,13 +259,6 @@ def normalize(data, offset=0):
     '''
     
     return (data-data.min())/(data.max()-data.min()) + offset
-    
-
-
-def make_ticklabels_invisible(axes):
-    for ax in axes:
-        for tl in ax.get_xticklabels() + ax.get_yticklabels():
-            tl.set_visible(False)
 
 
 def calculate_beamwidths(data):
@@ -519,53 +485,3 @@ x = pix2um(1)*(np.arange(data.shape[1]) - data.shape[1]/2)
 y = pix2um(1)*(np.arange(data.shape[0]) - data.shape[0]/2)
 X,Y = np.meshgrid(x,y)
 
-##
-#plotting for pretty pictures
-plot_grid = [3,6]
-plot_w = 10
-asp_ratio = plot_grid[0]/plot_grid[1]
-plot_h = plot_w*asp_ratio
-
-
-fig = plt.figure(figsize=(plot_w,plot_h), facecolor='w')
-gs = GridSpec(plot_grid[0], plot_grid[1])
-ax1 = plt.subplot(gs[:2, 0])
-# identical to ax1 = plt.subplot(gs.new_subplotspec((0,0), colspan=3))
-ax2 = plt.subplot(gs[:2,1:3])
-ax3 = plt.subplot(gs[:2, 3:], projection='3d')
-ax4 = plt.subplot(gs[2,1:3])
-ax5 = plt.subplot(gs[2,3:])
-ax6 = plt.subplot(gs[-1,0])
-
-ax6.axis('off')
-make_ticklabels_invisible([ax2])
-
-ax2.imshow(data, cmap=plt.cm.plasma, origin='lower', interpolation='bilinear',
-    extent=(x.min(), x.max(), y.min(), y.max()))
-contours = data.max()*(np.exp(-np.array([2,1.5,1])**2/2))
-widths = np.array([0.5,0.25,0.5])
-CS = ax2.contour(data, contours, colors = 'k', linewidths = widths, origin='lower', interpolation='bilinear', extent=(x.min(), x.max(), y.min(), y.max()))
-
-ax4.plot(x, normalize(np.sum(data,0)), 'k')
-ax4.set_xlabel('x (um)')
-
-ax1.plot(normalize(np.sum(data,1)), y, 'k')
-ax1.set_ylabel('y (um)')
-
-ax3.plot_surface(X,Y,data, cmap=plt.cm.plasma)
-ax3.set_ylabel('y (um)')
-ax3.set_xlabel('x (um)')
-
-ax5.plot(Z,d4x,'bx',markerfacecolor='none')
-ax5.plot(Z,d4y,'g+',markerfacecolor='none')
-ax5.plot(Z,2*gaussianbeamwaist(z,*valx[:3]),'b', label='X')
-ax5.plot(Z,2*gaussianbeamwaist(z,*valy[:3]),'g', label='Y')
-ax5.set_xlabel('z (mm)')
-ax5.set_ylabel('Beam Waist (um)')
-ax5.yaxis.tick_right()
-ax5.yaxis.set_label_position('right')
-ax5.legend(loc=9)
-
-ax6.text(-0.1,0.2,'M2x = %.2f\nM2y = %.2f\nwx = %.2f\nwy = %.2f' %(valx[2],valy[2],valx[1]/2,valy[1]/2))
-
-plt.show()

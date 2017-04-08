@@ -9,7 +9,8 @@ Notes:
 Diffraction grating pair
 Simulate grating pair
 pulse = input pulse object
-L = grating separation (m), use (-) L for stretcher, (+) L for compressor geometry
+L = grating separation (m), use (-) L for stretcher, (+) L for 
+    compressor geometry
 N = lns/mm of gratings
 AOI = angle of incidence (deg)
 
@@ -20,10 +21,10 @@ EVERYTHING IS FOR 1st order
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-
 from beamtools.constants import h,c
 
+__all__ = ['gdd2len','beta2','dispersion_coefs',
+           'diffraction_angle','transverse_beam_size','littrow_angle']
 
 def gdd2len(GDD, N, AOI, lambda0):
     '''Calculate separation length from total GDD, for given grating'''
@@ -34,7 +35,8 @@ def gdd2len(GDD, N, AOI, lambda0):
     w0 = 2*np.pi*c/lambda0
     theta = np.arcsin(m*2*np.pi*c/(w0*d) - np.sin(g))
 
-    L = np.abs(GDD*(d**2*w0**3*np.cos(theta)**3)/(-m**2*2*4*(np.pi**2)*c))
+    L = (np.abs(GDD*(d**2*w0**3*np.cos(theta)**3)
+        /(-m**2*2*4*(np.pi**2)*c)))
 
     L_real = L/np.cos(theta)    
     
@@ -64,10 +66,14 @@ def dispersion_coefs(L, N, AOI, lambda0):
     theta = np.arcsin(m*2*np.pi*c/(w0*d) - np.sin(g))
     
     phi0 = 4*L*w0*np.cos(theta)/c
-    phi1 = (phi0/w0)*(1+(2*np.pi*c*m*np.sin(theta)/(w0*d*np.cos(theta)**2)))
-    phi2 = (-m**2*2*4*(np.pi**2)*L*c/(d**2*w0**3))*(1/np.cos(theta)**3)
-    phi3 = (-3*phi2/w0)*(1+(2*np.pi*c*m*np.sin(theta)/(w0*d*np.cos(theta)**2)))
-    phi4 = ((2*phi3)**2/(3*phi2)) + phi2*(2*np.pi*c*m/(w0**2*d*np.cos(theta)**2))**2
+    phi1 = ((phi0/w0)*(1+(2*np.pi*c*m*np.sin(theta)
+            /(w0*d*np.cos(theta)**2))))
+    phi2 = ((-m**2*2*4*(np.pi**2)*L*c/(d**2*w0**3))
+            *(1/np.cos(theta)**3))
+    phi3 = ((-3*phi2/w0)*(1+(2*np.pi*c*m*np.sin(theta)
+            /(w0*d*np.cos(theta)**2))))
+    phi4 = (((2*phi3)**2/(3*phi2)) 
+            + phi2*(2*np.pi*c*m/(w0**2*d*np.cos(theta)**2))**2)
     
     return np.array([phi0,phi1,phi2,phi3,phi4])
     
@@ -87,7 +93,8 @@ def diffraction_angle(N, AOI, lambda0):
 def transverse_beam_size(GDD, N, AOI, lambda0, dlambda):
     '''Calculate maximum transverse beam size at second grating of pair'''
     L, L_real = gdd2len(GDD, N, AOI, lambda0)
-    dth = np.abs(diffAngle(N, AOI, lambda0 + dlambda/2) - diffAngle(N, AOI, lambda0-dlambda/2))
+    dth = (np.abs(diffAngle(N, AOI, lambda0 + dlambda/2) 
+            - diffAngle(N, AOI, lambda0-dlambda/2)))
     dxMax = 2*L_real*np.arctan(dth*np.pi/(2*180))
     
     return dxMax
