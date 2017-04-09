@@ -4,32 +4,32 @@ Created on Wed Aug 3 11:31:57 2016
 
 @author: cpkmanchee
 
-Notes on beamwaist:
-
-I ~ exp(-2*r**2/w0**2)
-w0 is 1/e^2 waist radius
-w0 = 2*sigma (sigma normal definition in gaussian)
+beam_profile.py contains methods for dealing with beam profile images.
+All definitions, usages, and calculations are consisten with ISO
+standard 11146 (generally dealing with D4sigma beamwidths).
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.gridspec import GridSpec
 import scipy.optimize as opt
 import uncertainties as un
-
 import glob
 import time
 
-def stop(s = 'error'): raise Exception(s)
+#import matplotlib.pyplot as plt
+#from mpl_toolkits.mplot3d import Axes3D
+#from matplotlib.gridspec import GridSpec
+
+__all__ = ['gaussian2d','gaussian_beamwaist','fitM2',
+            'get_roi','calculate_beamwidths','flattenrgb',
+            'calculate_2D_moments','pix2um']
+
+def stop(string = 'error'): raise Exception(string)
 
 
 def gaussian2D(xy_meshgrid,x0,y0,sigx,sigy,amp,const,theta=0):
-    '''
-    generates a 2D gaussian surface of size (n x m)
+    '''Generates a 2D gaussian surface of size (n x m).
     
     Inputs:
-    
         xy_meshgrid = [x,y]
         x = meshgrid of x array
         y = meshgrid of y array
@@ -39,22 +39,16 @@ def gaussian2D(xy_meshgrid,x0,y0,sigx,sigy,amp,const,theta=0):
     m = x.shape[1] (or y.) = number of columns
     
         x0,y0 = peak location
-    
         sig_ = standard deviation in x and y, gaussian 1/e radius
-    
         amp = amplitude
-    
         const = offset (constant)
-
         theta = rotation parameter, 0 by default
     
     Output:
-        
         g.ravel() = flattened array of gaussian amplitude data
     
     where g is the 2D array of gaussian amplitudes of size (n x m)
     '''
-
     x = xy_meshgrid[0]
     y = xy_meshgrid[1]
 
@@ -151,57 +145,8 @@ def fitM2(dz, z, wl=1.03E-6):
     return value, std
     
 
-
-def getroi(data,Nsig=3):
-    '''
-    Generates a region of interest for a 2D array, based on the varience of the data.
-    Cropping box is defined by [left, bottom, width, height]
-    
-    Inputs:
-        data = data array, 2D
-        Nsig = number of std away from average to include in roi, default is 4 (99.994% inclusion)
-        
-    Outputs:
-        data_roi = cropped data set, 2D array, size height x width    
-    '''
-    
-    datax = np.sum(data,0)
-    datay = np.sum(data,1)
-    
-    x = np.arange(datax.shape[0])
-    y = np.arange(datay.shape[0])
-
-    avgx = np.average(x, weights = datax)
-    avgy = np.average(y, weights = datay)
-    
-    sigx = np.sqrt(np.sum(datax*(x-avgx)**2)/datax.sum())
-    sigy = np.sqrt(np.sum(datay*(y-avgy)**2)/datay.sum())
-
-    left = np.int(avgx - Nsig*sigx)
-    bottom = np.int(avgy - Nsig*sigy)
-    width = np.int(2*Nsig*sigx)
-    height = np.int(2*Nsig*sigy)
-
-    if left <= 0:
-        width += left
-        left = 0
-
-    if bottom <= 0:
-        height += bottom
-        bottom = 0
-
-    if left+width > data.shape[1]:
-        width = data.shape[1] - left
-
-    if bottom+height > data.shape[0]:
-        height = data.shape[0] - bottom 
-
-    return data[bottom:bottom+height,left:left+width]
-
-
 def flattenrgb(im, bits=8, satlim=0.001):
-    '''
-    Flattens rbg array, excluding saturated channels
+    '''Flattens rbg array, excluding saturated channels
     '''
 
     sat_det = np.zeros(im.shape[2])
@@ -225,32 +170,6 @@ def flattenrgb(im, bits=8, satlim=0.001):
     return output, sat_det
     
 
-def d4sigma(data, xy):
-    
-    '''
-    calculate D4sigma of beam
-    x,y,data all same size
-    A is normalization factor
-    returns averages and d4sig in x and y
-    x and y directions are orientation of image. no adjustment
-    '''
-    
-    x = xy[0]
-    y = xy[1]
-    
-    dx,dy = np.meshgrid(np.gradient(x[0]),np.gradient(y[:,0]))
-
-    A = np.sum(data*dx*dy)
-    
-    avgx = np.sum(data*x*dx*dy)/A
-    avgy = np.sum(data*y*dx*dy)/A
-    
-    d4sigmax = 4*np.sqrt(np.sum(data*(x-avgx)**2*dx*dy)/A)
-    d4sigmay = 4*np.sqrt(np.sum(data*(y-avgy)**2*dx*dy)/A)
-    
-    return np.array([avgx, avgy, d4sigmax, d4sigmay])
-    
-
 def normalize(data, offset=0):
     '''
     normalize a dataset
@@ -261,18 +180,12 @@ def normalize(data, offset=0):
     return (data-data.min())/(data.max()-data.min()) + offset
 
 
-def calculate_beamwidths(data):
-    '''
+def calculate_beamwidths(data, error_limit=1E-4, it_limit=5):
+    '''Calculate beam profile parameters, ISO standard 11146
     data = image matrix
 
     data,x,y all same dimensions
     '''
-    error_limit = 0.0001
-    it_limit = 5
-
-    #x = pix2um(np.arange(data.shape[1]))
-    #y = pix2um(np.arange(data.shape[0]))
-    #x,y = np.meshgrid(x,y)
 
     errx = 1
     erry = 1
@@ -364,7 +277,6 @@ def get_roi(data,roi):
     data = 2D data
     roi = [x0,width,y0,height]
     '''
-    #need to fix!!!
     
     left = roi[0] - roi[1]/2
     bottom = roi[2] - roi[3]/2
