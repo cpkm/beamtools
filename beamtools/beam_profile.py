@@ -23,6 +23,12 @@ __all__ = ['gaussian2d','gaussian_beamwaist','fitM2',
             'get_roi','calculate_beamwidths','flattenrgb',
             'calculate_2D_moments','pix2um']
 
+
+BITS = 8       #image channel intensity resolution
+SATLIM = 0.001  #fraction of non-zero pixels allowed to be saturated
+PIXSIZE = 1.745  #pixel size in um, measured
+
+
 def stop(string = 'error'): raise Exception(string)
 
 
@@ -331,7 +337,7 @@ def pix2um(input):
 '''
 End of definitions
 '''    
-
+'''
 
 BITS = 8       #image channel intensity resolution
 SATLIM = 0.001  #fraction of non-zero pixels allowed to be saturated
@@ -396,4 +402,4 @@ data = normalize(get_roi(data.astype(float), img_roi[focus_number]))
 x = pix2um(1)*(np.arange(data.shape[1]) - data.shape[1]/2)
 y = pix2um(1)*(np.arange(data.shape[0]) - data.shape[0]/2)
 X,Y = np.meshgrid(x,y)
-
+'''
