@@ -4,18 +4,9 @@ Created on Sun Apr 2 15:30 2017
 
 @author: cpkmanchee
 
-Creates a dictionary of file formats and exports the dictionary using pickle.
-The .pkl file can be imported and used by other modules.
-
+Dictionary of file formats
 """
-'''
-import csv
-import pickle
 
-import os
-
-path = os.path.dirname((os.path.abspath(__file__)))
-'''
 
 file_formats = {'bt_regen_monitor': 
                 {'alias': ['regen_monitor','regen','monitor','mon'],
@@ -52,16 +43,19 @@ file_formats = {'bt_regen_monitor':
             'bt_beamprofiler':
                 {'alias':['bt_beamprofiler','bt_beam_profiler','bt_bp','beamprofiler','bt_beampointing','beampointing'],
                  'header_lines': 2,
-                 'number_data_columns': 2,
+                 'number_data_columns': 3,
                  'column_labels': ['time','x0','y0'],
                  'column_units': ['','um','um'],
                  'delimiter': '\t',
                  },
+            'bt_knifeedge':
+                {'alias':['bt_knifeedge','knifeedge','bt_ke'],
+                 'header_lines': 1,
+                 'number_data_columns': 2,
+                 'column_labels': ['position','power'],
+                 'column_units': ['um','W'],
+                 'delimiter': ',',
+                 }
 
 
             }
-
-'''
-with open(os.path.join(path,'file_formats.pkl'), 'wb') as f:
-    pickle.dump(file_formats,f,protocol=pickle.HIGHEST_PROTOCOL)
-'''

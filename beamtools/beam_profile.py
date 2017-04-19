@@ -15,6 +15,9 @@ import uncertainties as un
 import glob
 import time
 
+from beamtools.constants import h,c,pi,normalize
+from beamtools.import_data_file import import_data_file as _import
+
 #import matplotlib.pyplot as plt
 #from mpl_toolkits.mplot3d import Axes3D
 #from matplotlib.gridspec import GridSpec
@@ -29,7 +32,7 @@ SATLIM = 0.001  #fraction of non-zero pixels allowed to be saturated
 PIXSIZE = 1.745  #pixel size in um, measured
 
 
-def stop(string = 'error'): raise Exception(string)
+def _stop(string = 'error'): raise Exception(string)
 
 
 def gaussian2D(xy_meshgrid,x0,y0,sigx,sigy,amp,const,theta=0):
@@ -333,73 +336,97 @@ def pix2um(input):
         output =  [x*PIXSIZE for x in input]
 
     return output
-    
-'''
-End of definitions
-'''    
-'''
-
-BITS = 8       #image channel intensity resolution
-SATLIM = 0.001  #fraction of non-zero pixels allowed to be saturated
-PIXSIZE = 1.745  #pixel size in um, measured
 
 
-filedir = 'asymmetric scan'
-files = glob.glob(filedir+'/*.jp*g')
-
-# Consistency check, raises error if failure
-if not files:
-    stop('No files found... try again, but be better')
-
-try:
-    z = np.loadtxt(filedir + '/position.txt', skiprows = 1)
-    z = 2*z
-except (AttributeError, FileNotFoundError):
-    stop('No position file found --> best be named "position.txt"')
-    
-if np.size(files) is not np.size(z):
-    stop('# of images does not match positions - fix ASAP')
-    
-
-#output parameters
-beam_stats = []
-chl_sat = []
-img_roi = []
-
-for f in files:
-    
+def open_profile(filename, raw=False):
+    '''Import beam profile image file.
+    If raw = true, the raw image is return, otherwise flattened image is 
+    returned. Channel (RGB) saturation data is always returned.
+    '''
     im = plt.imread(f)
     data, sat = flattenrgb(im, BITS, SATLIM)
 
-    d4stats, roi , _ = calculate_beamwidths(data)
+    if raw:
+        return im, sat
+    else:
+        return data, sat
 
-    beam_stats += [d4stats]
-    chl_sat += [sat]
-    img_roi += [roi]
 
+def knife_edge(datafile):
+    '''Analyze knife edge data
+    '''
+    data = _import_data_file(datafile, 'bt_knifeedge')
+    x = data.position
+    power = data.power
 
+    profile = normalize(-np.gradient(power,np.gradient(x)))
+
+    avgx = np.average(x, weights = profile)
+    sig = np.sqrt(np.sum(profile*(x-avgx)**2)/profile.sum())
+
+    results = [profile,avgx,sig]
+
+    return data, results
     
-beam_stats = np.asarray(beam_stats)
-chl_sat = np.asarray(chl_sat)
-img_roi = np.asarray(img_roi)
 
-#x and y beam widths
-d4x = beam_stats[:,0]
-d4y = beam_stats[:,1]
+def m2analysis(directory):
+    '''Complete M2 analysis
+    '''
+    files = glob.glob(directory+'/*.jp*g')
 
-#fit to gaussian mode curve
-valx, stdx = fitM2(d4x,z)
-valy, stdy = fitM2(d4y,z)
+    # Consistency check, raises error if failure
+    if not files:
+        _stop('No files found... try again, but be better')
 
-#obtain 'focus image'
-focus_number = np.argmin(np.abs(valx[0]-z))
-Z = z-valx[0]
+    try:
+        z = np.loadtxt(directory + '/position.txt', skiprows = 1)
+        z = 2*z
+    except (AttributeError, FileNotFoundError):
+        _stop('No position file found --> best be named "position.txt"')
+        
+    if np.size(files) is not np.size(z):
+        _stop('# of images does not match positions - fix ASAP')
 
-im = plt.imread(files[focus_number])
-data, SAT = flattenrgb(im, BITS, SATLIM)
-data = normalize(get_roi(data.astype(float), img_roi[focus_number]))
+    #output parameters
+    beam_stats = []
+    chl_sat = []
+    img_roi = []
 
-x = pix2um(1)*(np.arange(data.shape[1]) - data.shape[1]/2)
-y = pix2um(1)*(np.arange(data.shape[0]) - data.shape[0]/2)
-X,Y = np.meshgrid(x,y)
-'''
+    for f in files:
+        
+        im = plt.imread(f)
+        data, sat = flattenrgb(im, BITS, SATLIM)
+
+        d4stats, roi , _ = calculate_beamwidths(data)
+
+        beam_stats += [d4stats]
+        chl_sat += [sat]
+        img_roi += [roi]
+
+
+        
+    beam_stats = np.asarray(beam_stats)
+    chl_sat = np.asarray(chl_sat)
+    img_roi = np.asarray(img_roi)
+
+    #x and y beam widths
+    d4x = beam_stats[:,0]
+    d4y = beam_stats[:,1]
+
+    #fit to gaussian mode curve
+    valx, stdx = fitM2(d4x,z)
+    valy, stdy = fitM2(d4y,z)
+
+    #obtain 'focus image'
+    focus_number = np.argmin(np.abs(valx[0]-z))
+    Z = z-valx[0]
+
+    im = plt.imread(files[focus_number])
+    data, SAT = flattenrgb(im, BITS, SATLIM)
+    data = normalize(get_roi(data.astype(float), img_roi[focus_number]))
+
+    x = pix2um(1)*(np.arange(data.shape[1]) - data.shape[1]/2)
+    y = pix2um(1)*(np.arange(data.shape[0]) - data.shape[0]/2)
+    X,Y = np.meshgrid(x,y)
+
+  
