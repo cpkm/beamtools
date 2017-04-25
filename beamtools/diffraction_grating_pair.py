@@ -24,7 +24,7 @@ import numpy as np
 from beamtools.constants import h,c
 
 __all__ = ['gdd2len','beta2','dispersion_coefs',
-           'diffraction_angle','transverse_beam_size','littrow_angle']
+           'diffraction_angle','transverse_beam_size','littrow_angle', 'sym_disp']
 
 def gdd2len(GDD, N, AOI, lambda0):
     '''Calculate separation length from total GDD, for given grating'''
@@ -65,7 +65,7 @@ def dispersion_coefs(L, N, AOI, lambda0):
     w0 = 2*np.pi*c/lambda0
     theta = np.arcsin(m*2*np.pi*c/(w0*d) - np.sin(g))
     
-    phi0 = 4*L*w0*np.cos(theta)/c
+    phi0 = 2*L*w0*np.cos(theta)/c
     phi1 = ((phi0/w0)*(1+(2*np.pi*c*m*np.sin(theta)
             /(w0*d*np.cos(theta)**2))))
     phi2 = ((-m**2*2*4*(np.pi**2)*L*c/(d**2*w0**3))
@@ -106,4 +106,23 @@ def littrow_angle(N, lambda0):
     a = (180/np.pi)*np.arcsin(lambda0/(2*d))
     
     return a
+
+def sym_disp(L, N, AOI, lambda0):
+    m = 1
+    g = AOI*np.pi/180    #convert AOI into rad
+    d = 1E-3/N    #gives grove spacing in m
+
+    w0 = 2*np.pi*c/lambda0
+    #theta = np.arcsin(m*2*np.pi*c/(w0*d) - np.sin(g))
+    w = sym.symbols('w')  
+    
+    orders = 5
+    phi = np.zeros(orders)
+    
+    phi0 = (2*L*w/c)*(1-(m*2*np.pi*c/(w*d) - sym.sin(g))**2)**(1/2)
+    
+    for i in range(orders):
+        phi[i] = sym.diff(phi0,w,i).subs(w,w0)
+        
+    return phi
     
