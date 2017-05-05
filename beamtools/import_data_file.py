@@ -12,11 +12,26 @@ import pickle
 
 from beamtools.file_formats import file_formats
 
-__all__ = ['import_data_file']
+__all__ = ['import_data_file', 'list_atr','list_filetypes']
 
 class objdict(dict):
     def __init__(self,d):
         self.__dict__ = d
+
+def list_filetypes():
+    '''Display all filetypes in dictionary
+    '''
+    [print(k) for k in file_formats.keys()]
+    return
+
+def list_atr(given_filetype):
+    '''List the attributes of resultant object from data import.
+    '''
+    filetype = filetype_lookup(file_formats,given_filetype.lower())
+    column_labels = file_formats.get(filetype).get('column_labels')
+    print(column_labels)
+    return
+
                 
 def filetype_lookup(file_dict, given_type):
     '''Identify file type for given input. Only first found match is returned.

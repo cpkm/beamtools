@@ -7,7 +7,6 @@ Created on Sun Apr 2 15:30 2017
 Dictionary of file formats
 """
 
-
 file_formats = {'bt_regen_monitor': 
                 {'alias': ['regen_monitor','regen','monitor','mon'],
                  'header_lines': 9,
