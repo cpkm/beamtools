@@ -15,14 +15,15 @@ import uncertainties as un
 import glob
 import time
 
-from beamtools.constants import h,c,pi,normalize
+from beamtools.constants import h,c,pi
+from beamtools.common import normalize
 from beamtools.import_data_file import import_data_file as _import
 
 #import matplotlib.pyplot as plt
 #from mpl_toolkits.mplot3d import Axes3D
 #from matplotlib.gridspec import GridSpec
 
-__all__ = ['gaussian2d','gaussian_beamwaist','fitM2',
+__all__ = ['gaussian_beamwaist','fitM2',
             'get_roi','calculate_beamwidths','flattenrgb',
             'calculate_2D_moments','pix2um']
 
@@ -35,44 +36,8 @@ PIXSIZE = 1.745  #pixel size in um, measured
 def _stop(string = 'error'): raise Exception(string)
 
 
-def gaussian2D(xy_meshgrid,x0,y0,sigx,sigy,amp,const,theta=0):
-    '''Generates a 2D gaussian surface of size (n x m).
-    
-    Inputs:
-        xy_meshgrid = [x,y]
-        x = meshgrid of x array
-        y = meshgrid of y array
-        
-    where x and y are of size (n x m)
-    n = y.shape[0] (or x.) = number of rows
-    m = x.shape[1] (or y.) = number of columns
-    
-        x0,y0 = peak location
-        sig_ = standard deviation in x and y, gaussian 1/e radius
-        amp = amplitude
-        const = offset (constant)
-        theta = rotation parameter, 0 by default
-    
-    Output:
-        g.ravel() = flattened array of gaussian amplitude data
-    
-    where g is the 2D array of gaussian amplitudes of size (n x m)
-    '''
-    x = xy_meshgrid[0]
-    y = xy_meshgrid[1]
-
-    a = np.cos(theta)**2/(2*sigx**2) + np.sin(theta)**2/(2*sigy**2)
-    b = -np.sin(2*theta)/(4*sigx**2) + np.sin(2*theta)/(4*sigy**2)
-    c = np.sin(theta)**2/(2*sigx**2) + np.cos(theta)**2/(2*sigy**2)
-
-    g = amp*np.exp(-(a*(x-x0)**2 -b*(x-x0)*(y-y0) + c*(y-y0)**2)) + const
-       
-    return g.ravel()
-
-
 def gaussian_beamwaist(z,z0,d0,M2=1,const=0,wl=1.030):
-    '''
-    generate gaussian beam profile w(z)
+    '''Generate gaussian beam profile w(z), along optical axis.
 
     w(z) = w0*(1+((z-z0)/zR)^2)^(1/2)
 
@@ -178,16 +143,6 @@ def flattenrgb(im, bits=8, satlim=0.001):
 
     return output, sat_det
     
-
-def normalize(data, offset=0):
-    '''
-    normalize a dataset
-    data is array or matrix to be normalized
-    offset = (optional) constant offset
-    '''
-    
-    return (data-data.min())/(data.max()-data.min()) + offset
-
 
 def calculate_beamwidths(data, error_limit=1E-4, it_limit=5):
     '''Calculate beam profile parameters, ISO standard 11146
@@ -353,7 +308,7 @@ def open_profile(filename, raw=False):
 
 
 def knife_edge(datafile):
-    '''Analyze knife edge data
+    '''Analyze knife edge data. Return analysis results and raw data.
     '''
     data = _import_data_file(datafile, 'bt_knifeedge')
     x = data.position
@@ -366,7 +321,7 @@ def knife_edge(datafile):
 
     results = [profile,avgx,sig]
 
-    return data, results
+    return results, data
     
 
 def m2analysis(directory):

@@ -12,6 +12,8 @@ import sympy as sym
 
 from beamtools.constants import h,c,pi
 
+__all__ = ['sellmeier','ior']
+
 
 def sellmeier(b_coefs, c_coefs, orders, l0=1.03E-6):
     '''Calculate dispersion parameters from Sellmeier coefficients.
