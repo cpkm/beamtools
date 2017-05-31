@@ -12,6 +12,7 @@ import os.path
 from beamtools.constants import h,c,pi
 from beamtools.common import normalize, gaussian, sech2
 from beamtools.import_data_file import import_data_file as _import
+from beamtools.import_data_file import objdict
 
 
 __all__ = ['spectrumFT']
@@ -38,7 +39,6 @@ def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_int
             #insert testing for wavelength/intensity location in dataobject
             wavelength = imported_data.wavelength
             intensity = imported_data.intensity
-            print(wavelength,intensity)
             #get units from dataobject
         else:
             print('invalid filetype')
@@ -69,4 +69,7 @@ def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_int
     t = np.fft.ifftshift(np.fft.fftfreq(n,df)[1:-1])
     ac =np.fft.ifftshift((np.fft.ifft(np.fft.ifftshift(psdi)))[1:-1])
 
-    return wl, psd, nui, psdi, t, ac
+    output_dict = {'time': t, 'ac': ac, 'nu': nui, 'psd': psdi}
+    output = objdict(output_dict)
+
+    return output, imported_data
