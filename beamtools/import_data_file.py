@@ -17,6 +17,8 @@ __all__ = ['import_data_file', 'list_atr','list_filetypes']
 class objdict(dict):
     def __init__(self,d):
         self.__dict__ = d
+    def fields(self):
+        return self.__dict__.keys()
 
 def list_filetypes():
     '''Display all filetypes in dictionary
@@ -64,7 +66,17 @@ def import_data_file(file, given_filetype):
         for i in range(header_lines):
             header.append(data.__next__())
         #write rest of data to dictionary, keys are column_labels, values = data 
-        [[(output[c].append(row[c_ind])) for c_ind,c in enumerate(column_labels)] for row in data]
+        [[(output[c].append(row[c_ind].strip())) for c_ind,c in enumerate(column_labels)] for row in data]
+
+    #convert data to float
+    for c in output.keys():
+        try:
+            output[c] = np.asarray(output[c],dtype=np.float)
+        except ValueError:
+            try:
+                output[c] = np.asarray(output[c])
+            except ValueError:
+                pass
 
     output.update({'header': header})
     output_obj = objdict(output)
