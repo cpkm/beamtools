@@ -310,7 +310,7 @@ def open_profile(filename, raw=False):
 def knife_edge(datafile):
     '''Analyze knife edge data. Return analysis results and raw data.
     '''
-    data = _import_data_file(datafile, 'bt_knifeedge')
+    data = _import(datafile, 'bt_knifeedge')
     x = data.position
     power = data.power
 
