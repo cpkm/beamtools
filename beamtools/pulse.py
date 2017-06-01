@@ -20,7 +20,8 @@ __all__ = ['spectrumFT']
 
 def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_interp=0):
     '''Compute transform limited pulse from spectrum.
-    data should be wavelength vs. PSD (intensity)
+    data = wavelength vs. PSD (intensity) if from_file=False
+        = filename of spectrum file to be imported if from_file=True
     Units assumed to be nm for wavelength.
     If from_file is set True, data should be filename
     Optional file_format, default is oceanoptics_spectrometer. Currently
