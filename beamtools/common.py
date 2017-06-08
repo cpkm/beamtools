@@ -8,7 +8,7 @@ Created Fri May 12
 
 import numpy as np
 
-__all__ = ['normalize','gaussian','sech2', 'gaussian2D']
+__all__ = ['normalize','gaussian','sech2', 'gaussian2D', 'alias_dict']
 
 def normalize(f, offset=0):
     '''Normalize array of data. Optional offset.
@@ -33,7 +33,7 @@ def sech2(x,sigma,amp=1,x0=0,const=0):
     amp = amplitude
     const = y-offset
     '''
-    return amp*np.sech((x-x0)/sigma)**2 + const
+    return amp*(1/np.cosh((x-x0)/sigma))**2 + const
 
 
 def gaussian2D(xy_meshgrid,x0,y0,sigx,sigy,amp,const,theta=0):
@@ -69,3 +69,16 @@ def gaussian2D(xy_meshgrid,x0,y0,sigx,sigy,amp,const,theta=0):
     g = amp*np.exp(-(a*(x-x0)**2 -b*(x-x0)*(y-y0) + c*(y-y0)**2)) + const
        
     return g.ravel()
+
+
+alias_dict = {
+        'gaus': ('gaus','gaussian','g'),
+        'sech2': ('sech2','secant squared','hyperbolic secant squared','s'),
+        'GausFit': ('GausFit','gaus','gaussian'),
+        'Sech2Fit': ('Sech2Fit', 'sech2','secant squared','hyperbolic secant squared'),
+        'constant': ('constant','const','c'),
+        'linear': ('linear','lin','l'),
+        'quadratic': ('quadratic', 'quad', 'q'),
+        'symmetric': ('symmetric','sym','s'),
+        'asymmetric': ('asymmetric','asym','a')
+        }
