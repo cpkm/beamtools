@@ -13,7 +13,7 @@ h = 6.62607004081E-34       #Planck constant, J*s
 hbar = 1.05457180013E-34    #Reduced Planck constant, J*s
 e = 1.602176620898E-19      #Elementary charge, C
 mu0 = pi*4E-7               #magnetic constant (permeability), N*A-2
-eps0 = 1/(mu0*c**2)         #electric constant (permitivity), F*m-1
+eps0 = 1/(pi*4E-7*c**2)     #electric constant (permitivity), F*m-1
 muB = 9.27400999457E-24     #Bohr magneton, J*T-1
 
 me = 9.1093835611E-31       #electron mass, kg
