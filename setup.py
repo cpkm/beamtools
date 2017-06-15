@@ -8,8 +8,8 @@ setup(
   description = 'A suite of tools for the analysis of optical beams',
   author = 'Kyle Manchee',
   author_email = 'cpkmanchee@gmail.com',
-  url = 'https://github.com/kikimaroca/beamtools',
-  download_url = 'https://github.com/kikimaroca/beamtools/archive/v0.3.tar.gz',
+  url = 'https://github.com/cpkm/beamtools',
+  download_url = 'https://github.com/cpkm/beamtools/archive/v0.3.tar.gz',
   keywords = ['optics', 'analysis', 'beams', 'spectrum'],
   classifiers = [],
 )
