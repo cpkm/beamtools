@@ -6,7 +6,7 @@ Created on Wed Oct 19 11:02:23 2016
 
 Notes:
 
-Diffraction grating pair
+Diffraction grating pair - double pass!
 Simulate grating pair
 pulse = input pulse object
 L = grating separation (m), use (-) L for stretcher, (+) L for 
@@ -14,10 +14,8 @@ L = grating separation (m), use (-) L for stretcher, (+) L for
 N = lns/mm of gratings
 AOI = angle of incidence (deg)
 
-theta = diffraction angle (assumed 1 order, as is standard)
+theta = diffraction angle
 d = groove spacing
-
-EVERYTHING IS FOR 1st order
 """
 
 import numpy as np
