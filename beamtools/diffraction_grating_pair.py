@@ -22,13 +22,14 @@ EVERYTHING IS FOR 1st order
 
 import numpy as np
 from beamtools.constants import h,c
+import sympy as sym
 
-__all__ = ['gdd2len','beta2','dispersion_coefs',
-           'diffraction_angle','transverse_beam_size','littrow_angle', 'sym_disp']
+__all__ = ['gdd2len','beta2','disp_coef',
+           'diff_angle','trans_beam_size','littrow_angle']
 
-def gdd2len(GDD, N, AOI, lambda0):
+def gdd2len(GDD, N, AOI, lambda0, diff_order=1):
     '''Calculate separation length from total GDD, for given grating'''
-    m = 1
+    m = diff_order
     g = AOI*np.pi/180    #convert AOI into rad
     d = 1E-3/N    #gives grove spacing in m
 
@@ -42,9 +43,10 @@ def gdd2len(GDD, N, AOI, lambda0):
     
     return L, L_real
     
-def beta2(N, AOI, lambda0):
+
+def beta2(N, AOI, lambda0, diff_order=1):
     '''Calculate dispersion paramter, beta2, for given grating'''
-    m = 1
+    m = diff_order
     g = AOI*np.pi/180    #convert AOI into rad
     d = 1E-3/N    #gives grove spacing in m
 
@@ -56,8 +58,62 @@ def beta2(N, AOI, lambda0):
     return beta2
     
 
-def dispersion_coefs(L, N, AOI, lambda0):
-    '''Calculate grating dispersion coefficients from grating specs'''
+def disp_coef(L, N, AOI, lambda0,disp_order=5,diff_order=1):
+    '''Calculate grating dispersion coefficents symbolically.
+    '''
+    orders = disp_order
+    m = diff_order
+    g = AOI*np.pi/180    #convert AOI into rad
+    d = 1E-3/N    #gives grove spacing in m
+
+    w0 = 2*np.pi*c/lambda0
+    #theta = np.arcsin(m*2*np.pi*c/(w0*d) - np.sin(g))
+    w = sym.symbols('w')  
+
+    phi = np.zeros(orders)
+    
+    phi0 = (2*L*w/c)*(1-(m*2*np.pi*c/(w*d) - sym.sin(g))**2)**(1/2)
+    
+    for i in range(orders):
+        phi[i] = sym.diff(phi0,w,i).subs(w,w0)
+        
+    return phi
+    
+
+def diff_angle(N, AOI, lambda0, diff_order=1):
+    '''Calculate angle of diffraction for given grating and AOI'''
+    m = diff_order
+    g = AOI*np.pi/180    #convert AOI into rad
+    d = 1E-3/N    #gives grove spacing in m
+
+    w0 = 2*np.pi*c/lambda0
+    theta = np.arcsin(m*2*np.pi*c/(w0*d) - np.sin(g))
+    
+    return theta*180/np.pi
+    
+
+def trans_beam_size(GDD, N, AOI, lambda0, dlambda,diff_order=1):
+    '''Calculate maximum transverse beam size at second grating of pair'''
+    L, L_real = gdd2len(GDD, N, AOI, lambda0,diff_order)
+    dth = (np.abs(diff_angle(N, AOI, lambda0 + dlambda/2,diff_order) 
+            - diff_angle(N, AOI, lambda0-dlambda/2,diff_order)))
+    dxMax = 2*L_real*np.arctan(dth*np.pi/(2*180))
+    
+    return dxMax
+    
+    
+def littrow_angle(N, lambda0):
+    '''Calculate Littrow angle for grating'''
+    d = 1E-3/N
+    a = (180/np.pi)*np.arcsin(lambda0/(2*d))
+    
+    return a
+
+
+
+
+'''
+def disp_coefs_depreciated(L, N, AOI, lambda0):
     m = 1
     g = AOI*np.pi/180    #convert AOI into rad
     d = 1E-3/N    #gives grove spacing in m
@@ -76,53 +132,5 @@ def dispersion_coefs(L, N, AOI, lambda0):
             + phi2*(2*np.pi*c*m/(w0**2*d*np.cos(theta)**2))**2)
     
     return np.array([phi0,phi1,phi2,phi3,phi4])
-    
-
-def diffraction_angle(N, AOI, lambda0):
-    '''Calculate angle of diffraction for given grating and AOI'''
-    m = 1
-    g = AOI*np.pi/180    #convert AOI into rad
-    d = 1E-3/N    #gives grove spacing in m
-
-    w0 = 2*np.pi*c/lambda0
-    theta = np.arcsin(m*2*np.pi*c/(w0*d) - np.sin(g))
-    
-    return theta*180/np.pi
-    
-
-def transverse_beam_size(GDD, N, AOI, lambda0, dlambda):
-    '''Calculate maximum transverse beam size at second grating of pair'''
-    L, L_real = gdd2len(GDD, N, AOI, lambda0)
-    dth = (np.abs(diffAngle(N, AOI, lambda0 + dlambda/2) 
-            - diffAngle(N, AOI, lambda0-dlambda/2)))
-    dxMax = 2*L_real*np.arctan(dth*np.pi/(2*180))
-    
-    return dxMax
-    
-    
-def littrow_angle(N, lambda0):
-    '''Calculate Littrow angle for grating'''
-    d = 1E-3/N
-    a = (180/np.pi)*np.arcsin(lambda0/(2*d))
-    
-    return a
-
-def sym_disp(L, N, AOI, lambda0):
-    m = 1
-    g = AOI*np.pi/180    #convert AOI into rad
-    d = 1E-3/N    #gives grove spacing in m
-
-    w0 = 2*np.pi*c/lambda0
-    #theta = np.arcsin(m*2*np.pi*c/(w0*d) - np.sin(g))
-    w = sym.symbols('w')  
-    
-    orders = 5
-    phi = np.zeros(orders)
-    
-    phi0 = (2*L*w/c)*(1-(m*2*np.pi*c/(w*d) - sym.sin(g))**2)**(1/2)
-    
-    for i in range(orders):
-        phi[i] = sym.diff(phi0,w,i).subs(w,w0)
-        
-    return phi
+'''
     
