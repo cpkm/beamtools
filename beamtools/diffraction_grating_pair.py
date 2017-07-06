@@ -22,7 +22,7 @@ import numpy as np
 from beamtools.constants import h,c
 import sympy as sym
 
-__all__ = ['gdd2len','beta2','disp_coef',
+__all__ = ['gdd2len','beta2','disp_tot','betas'
            'diff_angle','trans_beam_size','littrow_angle']
 
 def gdd2len(GDD, N, AOI, lambda0, diff_order=1):
@@ -56,8 +56,17 @@ def beta2(N, AOI, lambda0, diff_order=1):
     return beta2
     
 
-def disp_coef(L, N, AOI, lambda0,disp_order=5,diff_order=1):
+def disp_tot(L, N, AOI, lambda0,disp_order=5,diff_order=1):
+    '''Calculate total grating dispersion.
+    '''
+    phi = L*betas(N, AOI, lambda0,disp_order,diff_order)
+        
+    return phi
+    
+
+def betas(N, AOI, lambda0,disp_order=5,diff_order=1):
     '''Calculate grating dispersion coefficents symbolically.
+    Yeilds beta parameters units (s**n)*(m**-1), n is dispersion order.
     '''
     orders = disp_order
     m = diff_order
@@ -68,15 +77,15 @@ def disp_coef(L, N, AOI, lambda0,disp_order=5,diff_order=1):
     #theta = np.arcsin(m*2*np.pi*c/(w0*d) - np.sin(g))
     w = sym.symbols('w')  
 
-    phi = np.zeros(orders)
+    beta = np.zeros(orders)
     
-    phi0 = (2*L*w/c)*(1-(m*2*np.pi*c/(w*d) - sym.sin(g))**2)**(1/2)
+    beta0 = (2*w/c)*(1-(m*2*np.pi*c/(w*d) - sym.sin(g))**2)**(1/2)
     
     for i in range(orders):
-        phi[i] = sym.diff(phi0,w,i).subs(w,w0)
+        beta[i] = sym.diff(beta0,w,i).subs(w,w0)
         
-    return phi
-    
+    return beta
+
 
 def diff_angle(N, AOI, lambda0, diff_order=1):
     '''Calculate angle of diffraction for given grating and AOI'''
