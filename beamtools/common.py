@@ -8,7 +8,23 @@ Created Fri May 12
 
 import numpy as np
 
-__all__ = ['normalize','gaussian','sech2', 'gaussian2D', 'rk4', 'alias_dict']
+__all__ = ['normalize','gaussian','sech2', 'gaussian2D','rk4','alias_dict']
+
+
+class Func:
+    def __init__(self, value=None, index=None):
+        self.val = value
+        self.ind = index
+
+    def at(self,x):
+        return np.interp(x, self.ind, self.val)
+
+    def diff(self):
+        self.gradient = np.gradient(self.val)/np.gradient(self.ind)
+            
+    def diff_at(self,x):
+        return np.interp(x,self.ind,self.gradient)
+
 
 def normalize(f, offset=0):
     '''Normalize array of data. Optional offset.
