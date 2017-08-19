@@ -8,7 +8,7 @@ Created Fri May 12
 
 import numpy as np
 
-__all__ = ['normalize','gaussian','sech2', 'gaussian2D', 'alias_dict']
+__all__ = ['normalize','gaussian','sech2', 'gaussian2D', 'rk4', 'alias_dict']
 
 def normalize(f, offset=0):
     '''Normalize array of data. Optional offset.
@@ -69,6 +69,37 @@ def gaussian2D(xy_meshgrid,x0,y0,sigx,sigy,amp,const,theta=0):
     g = amp*np.exp(-(a*(x-x0)**2 -b*(x-x0)*(y-y0) + c*(y-y0)**2)) + const
        
     return g.ravel()
+
+def rk4(f, x, y0, const_args=[], abs_x=False):
+    '''
+    functional form
+    y'(x) = f(x,y,constants)
+
+    f must be function, f(x,y,const_args)
+    x = array
+    y0 = initial condition,
+    cont_args = additional constants required for f
+
+    returns y, integrated array
+    '''
+
+    N = np.size(x)
+    y = np.zeros(np.shape(x))
+    y[0] = y0
+    dx = np.gradient(x)
+
+    if abs_x:
+        dx = np.abs(dx)
+
+    for i in range(N-1):
+        k1 = f(x[i], y[i], *const_args)
+        k2 = f(x[i] + dx[i]/2, y[i] + k1*dx[i]/2, *const_args)
+        k3 = f(x[i] + dx[i]/2, y[i] + k2*dx[i]/2, *const_args)
+        k4 = f(x[i] + dx[i], y[i] + k3*dx[i], *const_args)
+
+        y[i+1] = y[i] + (k1 + 2*k2 + 2*k3 + k4)*dx[i]/6
+
+    return y
 
 
 alias_dict = {
