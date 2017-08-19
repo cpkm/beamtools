@@ -14,25 +14,11 @@ change the object's parameters in the primary script
 import numpy as np
 import pickle
 
+from beamtools.constants import h, c, pi, mu0, eps0
+from beamtools.common import Func, normalize, rk4
+from beamtools.import_data_file import objdict
+
 from tqdm import tqdm
-
-
-#constants
-h = 6.62606957E-34  #J*s
-c = 299792458.0     #m/s
-mu0 = np.pi*4E-7               #magnetic constant (permeability), N*A-2
-eps0 = 1/(np.pi*4E-7*c**2)         #electric constant (permitivity), F*m-1
-
-
-class func:
-    '''general function class to enable interpolation of a variable
-    '''
-    def __init__(self, value = None, x = None):
-        self.val = value
-        self.ind = x
-
-    def at(self,x):
-        return np.interp(x, self.ind, self.val)
 
 
 class Pulse:
@@ -52,13 +38,13 @@ class Pulse:
     T_BIT_DEFAULT = 12      #default time resolution, 2^12
     T_WIN_DEFAULT = 20E-12  #default window size, 20ps
 
-    def __init__(self, lambda0 = 1.030E-6):
+    def __init__(self, lambda0=1.030E-6):
         self.time = None
         self.freq = None
         self.At = None
         self.lambda0 = lambda0
 
-    def initializeGrid(self, t_bit_res= T_BIT_DEFAULT, t_window= T_WIN_DEFAULT):
+    def initializeGrid(self, t_bit_res=T_BIT_DEFAULT, t_window=T_WIN_DEFAULT):
         nt = 2**t_bit_res    #number of time steps, power of 2 for FFT
         dtau = 2*t_window/nt    #time step size
 
@@ -82,7 +68,7 @@ class Pulse:
         '''
         return np.abs(self.getAf())**2
 
-    def copyPulse(self, new_At = None):
+    def copyPulse(self, new_At=None):
         '''Duplicates pulse, outputs new pulse instance.
         Can set new At at same time by sending new_At. If not sent, new_pulse.At is same
         '''
@@ -126,7 +112,7 @@ class Fiber:
     CORE_D_DEFAULT = 6E-6    #default core diameter, 6um
     CLAD_D_DEFAULT = 125E-6  #default clad diameter, 125um
 
-    def __init__(self, length = 0, grid_type = 'abs', z_grid = None,  alpha = 0, beta = np.array([0,0,0]), gamma = 0):
+    def __init__(self, length=0, grid_type='abs', z_grid=None, alpha=0, beta=np.array([0,0,0]), gamma=0):
 
         self.length = length
         self.alpha = alpha
@@ -138,7 +124,7 @@ class Fiber:
 
         self.initializeGrid(self.length, grid_type, z_grid)
 
-    def initializeGrid(self, length, grid_type = 'abs', z_grid = None):
+    def initializeGrid(self, length, grid_type='abs', z_grid=None):
         '''
         -sets up the z-axis array for the fiber
         -can be called and re-called at any time (even after creation)
@@ -196,7 +182,7 @@ class FiberGain:
     CORE_D_DEFAULT = 6E-6    #default core diameter, 6um
     CLAD_D_DEFAULT = 125E-6  #default clad diameter, 125um
 
-    def __init__(self, length = 0, alpha = 0, beta = np.array([0,0,0]), gamma = 0, gain = 0, grid_type = 'abs', z_grid = None):
+    def __init__(self, length=0, alpha=0, beta=np.array([0,0,0]), gamma=0, gain=0, grid_type='abs', z_grid=None):
 
         self.length = length
         self.alpha = alpha
@@ -219,7 +205,7 @@ class FiberGain:
         self.initializeGrid(self.length, grid_type, z_grid)
 
 
-    def initializeGrid(self, length, grid_type = 'abs', z_grid = None):
+    def initializeGrid(self, length, grid_type='abs', z_grid=None):
         '''
         -sets up the z-axis array for the fiber
         -can be called and re-called at any time (even after creation)
@@ -257,51 +243,19 @@ class FiberGain:
             self.gain = np.zeros(np.size(self.z))
             
 
-def rk4(f, x, y0, const_args = [], abs_x = False):
-    '''
-    functional form
-    y'(x) = f(x,y,constants)
-
-    f must be function, f(x,y,const_args)
-    x = array
-    y0 = initial condition,
-    cont_args = additional constants required for f
-
-    returns y, integrated array
-    '''
-
-    N = np.size(x)
-    y = np.zeros(np.shape(x))
-    y[0] = y0
-    dx = np.gradient(x)
-
-    if abs_x:
-        dx = np.abs(dx)
-
-    for i in range(N-1):
-        k1 = f(x[i], y[i], *const_args)
-        k2 = f(x[i] + dx[i]/2, y[i] + k1*dx[i]/2, *const_args)
-        k3 = f(x[i] + dx[i]/2, y[i] + k2*dx[i]/2, *const_args)
-        k4 = f(x[i] + dx[i], y[i] + k3*dx[i], *const_args)
-
-        y[i+1] = y[i] + (k1 + 2*k2 + 2*k3 + k4)*dx[i]/6
-
-    return y
-
-
-def saveObj(obj, filename):
+def save_obj(obj, filename):
     with open(filename, 'wb') as output:
         pickle.dump(obj, output, -1)
 
 
-def loadObj(filename):
+def load_obj(filename):
     with open(filename, 'rb') as input:
         obj = pickle.load(input)
 
     return obj
 
 
-def checkInput(inputData, requiredType, *inputNum):
+def check_input(inputData, requiredType, *inputNum):
     
     if len(inputNum)==1:
         number = inputNum[0]
@@ -316,7 +270,7 @@ def checkInput(inputData, requiredType, *inputNum):
     return(errMsg)
 
 
-def rmswidth(x,F):
+def rms_width(x,F):
     
     if isinstance(x, np.ndarray):
         pass
@@ -349,7 +303,7 @@ def rmswidth(x,F):
     return(mu, np.sqrt(var))
  
 
-def propagateFiber (pulse, fiber, autodz = False):
+def propagate_fiber (pulse, fiber, autodz=False):
     '''This function will propagate the input field along the length of...
     a fibre with the given properties...
 
@@ -371,7 +325,7 @@ def propagateFiber (pulse, fiber, autodz = False):
     outputField = time domain output field, At
     
     Warning: setting autodz = True will modify fiber object!!!
-    autodz uses calcZGrid to calculate dz based on the input pulse and fiber
+    autodz uses calc_zgrid to calculate dz based on the input pulse and fiber
     Should not be used for gain fiber!!!, since gain calc depends on dz as well
     ''' 
     if autodz == False:
@@ -385,7 +339,7 @@ def propagateFiber (pulse, fiber, autodz = False):
             except TypeError:
                 res = 'med'
 
-        dz = calcZGrid(fiber,pulse,res)
+        dz = calc_zgrid(fiber,pulse,res)
         fiber.initializeGrid(fiber.length, 'abs', dz)
     
     #Pulse inputs
@@ -445,7 +399,7 @@ def propagateFiber (pulse, fiber, autodz = False):
     return outputField
     
 
-def calcZGrid(fiber,pulse, res = 'med'):
+def calc_zgrid(fiber, pulse, res='med'):
     '''Autocalculation of zgrid of Fiber.
     fiber = class Fiber() or FiberGain() instance
     pulse = class Pulse() instance
@@ -467,7 +421,7 @@ def calcZGrid(fiber,pulse, res = 'med'):
     if n<=0:
         n = 1
 
-    _, t0 = rmswidth(pulse.time, np.abs(pulse.At))
+    _, t0 = rms_width(pulse.time, np.abs(pulse.At))
     p0 = (np.abs(pulse.At)**2).max()
     
     ld = t0**2/(np.abs(fiber.beta[0]))
@@ -477,10 +431,10 @@ def calcZGrid(fiber,pulse, res = 'med'):
     return l_ref/n
     
     
-def calcGain(fiber, Pp, Ps, 
-        pump_scheme = 'core', 
-        pump_dir = 'forward', 
-        method = 'simple', 
+def calc_gain(fiber, Pp, Ps, 
+        pump_scheme='core', 
+        pump_dir='forward', 
+        method='simple', 
         min_err=1E-4):
     '''
     Calculate steady state gain over fiber
@@ -549,7 +503,7 @@ def calcGain(fiber, Pp, Ps,
         dIsig = lambda z, I, n: -G_s*(s_as*N*(1-n.at(z)) - s_es*N*n.at(z))*I 
         dIase = lambda z, I, n: -G_s*(s_as*N*(1-n.at(z)) - s_es*N*n.at(z))*I + n.at(z)*h*v_s*N*s_es*dv_ase/MFA
 
-        n = func()
+        n = Func()
         n.ind = fiber.z
         n.val = np.zeros(np.shape(n.ind))
 
@@ -597,7 +551,7 @@ def calcGain(fiber, Pp, Ps,
     return g
 
 
-def gratingPair(pulse, L, N, AOI, loss = 0, return_coef = False):
+def grating_pair(pulse, L, N, AOI, loss=0, return_coef=False):
     '''
     Simulate grating pair, double pass!
     pulse = input pulse object
@@ -633,7 +587,7 @@ def gratingPair(pulse, L, N, AOI, loss = 0, return_coef = False):
         return output_At
 
 
-def powerTap(pulse, tap, loss = 0):
+def power_tap(pulse, tap, loss=0):
     '''
     Simulate splitter or tap
     tap is 'output', 'signal' is to cavity. Just semantics though
@@ -656,7 +610,7 @@ def powerTap(pulse, tap, loss = 0):
     return output_signal, output_tap
 
 
-def coupler2x2(pulse1, pulse2, tap, loss = 0):
+def coupler_2x2(pulse1, pulse2, tap, loss=0):
     '''Simulates splitter/coupler
     requires 2 pulses, outputs 2 pulses.
     set either pulse to None for 'splitter' behaviour
@@ -688,7 +642,7 @@ def coupler2x2(pulse1, pulse2, tap, loss = 0):
     return output_signal, output_tap
 
 
-def opticalFilter(pulse, filter_type, lambda0 = None, bandwidth = 2E-9, loss = 0):
+def optical_filter(pulse, filter_type, lambda0=None, bandwidth=2E-9, loss=0):
     '''
     Simulate filter, bandpass, longpass, shortpass
     default bandwidth is 2nm
@@ -739,7 +693,7 @@ def opticalFilter(pulse, filter_type, lambda0 = None, bandwidth = 2E-9, loss = 0
     return output_At
 
 
-def saturableAbs(pulse,sat_int,spot_size,mod_depth=1,loss=0):
+def saturable_abs(pulse,sat_int,spot_size,mod_depth=1,loss=0):
     ''' Simulate saturable absorber.
     sat_int = saturation intensity, J/m**2
     spot_size = beam diameter
