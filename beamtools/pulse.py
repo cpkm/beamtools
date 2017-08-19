@@ -1,7 +1,7 @@
 '''
 Pulse characterization
 
-Created Fri May 12
+Created Fri May 12 2017
 
 @author: cpkmanchee
 '''
