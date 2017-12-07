@@ -77,25 +77,27 @@ def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_int
 
     return output, imported_data
 
-def ac_x2t(position,angle=30,config='sym'):
+
+def ac_x2t(position,aoi=15,config='sym'):
     '''Convert autocorrelation position to time
+    Symmetric - stage moves perp to normal.
+    Asymmetric - stage moves along incoming optical axis
     '''
     if type(config) is not str:
         print('Unrecognized configuration. Must be symmetric or asymmetric.')
         return position
 
     if config.lower() in alias_dict['symmetric']:
-        time = position*2*np.cos(angle*pi/180)
+        time = (1/c)*position*2*np.cos(aoi*pi/180)
 
     elif config.lower() in alias_dict['asymmetric']:
-        time = position*(1+np.cos(angle*pi/180))
+        time = (1/c)*position*(1+np.cos(2*aoi*pi/180))
 
     else:
         print('Unrecognized configuration. Must be symmetric or asymmetric.')
         return position
 
     return time
-
 
 
 def fit_ac(data, form='all', from_file = False, file_type='bt_ac', convert_time = True, bgform = 'constant'):
@@ -118,6 +120,7 @@ def fit_ac(data, form='all', from_file = False, file_type='bt_ac', convert_time 
             return -1
 
     else:
+        imported_data = ()
         position = data[0]
         intensity = data[1]
 
