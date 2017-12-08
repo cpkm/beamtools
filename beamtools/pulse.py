@@ -17,7 +17,7 @@ from beamtools.import_data_file import objdict
 from scipy.optimize import curve_fit
 
 
-__all__ = ['spectrumFT', 'fit_ac', 'ac_x2t']
+__all__ = ['spectrumFT', 'fit_ac', 'ac_x2t', 'sigma_fwhm']
 
 
 class FitResult():
@@ -30,6 +30,9 @@ class FitResult():
 
     def subs(self,x):
         return self.ffunc(x,*self.popt)
+
+    def get_args(self):
+        return inspect.getargspec(self.ffunc)
 
 
 def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_interp=0):
@@ -242,6 +245,19 @@ def fit_ac(data, form='all', from_file = False, file_type='bt_ac', bgform = 'con
             popt=poptSech2, pcov=pcovSech2))
 
     return imported_data, fit_results
+
+
+def sigma_fwhm(sigma, shape='gaus'):
+    '''Convert sigma to full-width half-max
+    '''
+    if shape.lower() in alias_dict['gaus']:
+        A = 2*np.sqrt(2*np.log(2))
+    elif shape.lower() in alias_dict['sech2']:
+        A = 2*np.arccosh(np.sqrt(2))
+    else:
+        A = 1
+
+    return A*sigma
 
 
 def _background(x,y,form = 'constant'):
