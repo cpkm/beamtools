@@ -65,6 +65,7 @@ def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_int
     else:
         wavelength = data[0]
         intensity = data[1]
+        imported_data = data
 
     if n_interp == 0:
         #insert here later - round up to nearest power of two.
@@ -115,7 +116,7 @@ def ac_x2t(position,aoi=15,config='sym'):
     return time
 
 
-def fit_ac(data, form='all', from_file = False, file_type='bt_ac', bgform = 'constant'):
+def fit_ac(data, from_file = False, file_type='bt_ac', form='all', bgform = 'constant'):
     '''Fit autocorrelation peak.
     data must be either:
         1. 2 x n array - data[0] = time(delay), data[1] = intensity
@@ -147,7 +148,7 @@ def fit_ac(data, form='all', from_file = False, file_type='bt_ac', bgform = 'con
             return -1
 
     else:
-        imported_data = ()
+        imported_data = data
         delay = data[0]
         intensity = data[1]
 
@@ -244,7 +245,7 @@ def fit_ac(data, form='all', from_file = False, file_type='bt_ac', bgform = 'con
         fit_results.append(FitResult(ffunc=fitfuncSech2, ftype='sech2',
             popt=poptSech2, pcov=pcovSech2))
 
-    return imported_data, fit_results
+    return fit_results, imported_data
 
 
 def sigma_fwhm(sigma, shape='gaus'):
