@@ -8,7 +8,7 @@ Created Fri May 12
 
 import numpy as np
 
-__all__ = ['normalize','gaussian','sech2', 'gaussian2D','rk4','alias_dict']
+__all__ = ['normalize','gaussian','sech2','lorentzian','gaussian2D','rk4','alias_dict']
 
 
 class Func:
@@ -50,6 +50,16 @@ def sech2(x,sigma,amp=1,x0=0,const=0):
     const = y-offset
     '''
     return amp*(1/np.cosh((x-x0)/sigma))**2 + const
+
+def lorentzian(x,sigma,amp=1,x0=0,const=0):
+    '''Lorentzian distribution.
+    x = independent variable
+    sigma = width parameter
+    x0 = centre position
+    amp = amplitude
+    const = y-offset
+    '''
+    return amp*(sigma**2/((x-x0)**2+sigma**2)) + const
 
 
 def gaussian2D(xy_meshgrid,x0,y0,sigx,sigy,amp,const,theta=0):
