@@ -34,6 +34,14 @@ file_formats = {'bt_regen_monitor':
             'bt_autocorrelator': 
                 {'alias':['bt_autocorrelator','autocorrelator','ac','auto_correlator','auto','bt_ac','btac'],
                  'header_lines': 0,
+                 'number_data_columns': 3,
+                 'column_labels': ['position', 'delay', 'power'],
+                 'column_units': ['mm', 'ps', 'W'],
+                 'delimiter': '\t',
+                 },
+            'bt_autocorrelator_old': 
+                {'alias':['bt_autocorrelator_old','autocorrelator_old','ac_old','auto_correlator_old','auto_old','bt_ac_old','btac_old'],
+                 'header_lines': 0,
                  'number_data_columns': 2,
                  'column_labels': ['position','power'],
                  'column_units': ['mm', 'W'],

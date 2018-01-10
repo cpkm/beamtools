@@ -17,7 +17,22 @@ from beamtools.import_data_file import objdict
 from scipy.optimize import curve_fit
 
 
-__all__ = ['spectrumFT', 'fit_ac', 'ac_x2t']
+__all__ = ['spectrumFT', 'fit_ac', 'ac_x2t', 'sigma_fwhm']
+
+
+class FitResult():
+    def __init__(self, ffunc, ftype, popt, pcov=0, indep_var='time'):
+        self.ffunc = ffunc
+        self.ftype = ftype
+        self.popt = popt
+        self.pcov = pcov
+        self.iv=indep_var
+
+    def subs(self,x):
+        return self.ffunc(x,*self.popt)
+
+    def get_args(self):
+        return inspect.getargspec(self.ffunc)
 
 
 def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_interp=0):
@@ -50,6 +65,7 @@ def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_int
     else:
         wavelength = data[0]
         intensity = data[1]
+        imported_data = data
 
     if n_interp == 0:
         #insert here later - round up to nearest power of two.
@@ -57,7 +73,7 @@ def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_int
     else:
         n = 2**12
 
-    #use units to conver wavelength to SI
+    #use units to convert wavelength to SI
     wl = wavelength*1E-9
     psd = normalize(intensity)
     nu = c/wl       #nu is SI
@@ -77,18 +93,21 @@ def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_int
 
     return output, imported_data
 
-def ac_x2t(position,angle=30,config='sym'):
+
+def ac_x2t(position,aoi=15,config='sym'):
     '''Convert autocorrelation position to time
+    Symmetric - stage moves perp to normal.
+    Asymmetric - stage moves along incoming optical axis
     '''
     if type(config) is not str:
         print('Unrecognized configuration. Must be symmetric or asymmetric.')
         return position
 
     if config.lower() in alias_dict['symmetric']:
-        time = position*2*np.cos(angle*pi/180)
+        time = (1/c)*position*2*np.cos(aoi*pi/180)
 
     elif config.lower() in alias_dict['asymmetric']:
-        time = position*(1+np.cos(angle*pi/180))
+        time = (1/c)*position*(1+np.cos(2*aoi*pi/180))
 
     else:
         print('Unrecognized configuration. Must be symmetric or asymmetric.')
@@ -97,9 +116,14 @@ def ac_x2t(position,angle=30,config='sym'):
     return time
 
 
-
-def fit_ac(data, form='all', from_file = False, file_type='bt_ac', convert_time = True, bgform = 'constant'):
+def fit_ac(data, from_file = False, file_type='bt_ac', form='all', bgform = 'constant'):
     '''Fit autocorrelation peak.
+    data must be either:
+        1. 2 x n array - data[0] = time(delay), data[1] = intensity
+        2. datafile name --> from_file must be True
+
+    If there is no 'delay' parameter in data file (only position), the position is
+     auto converted to time delay.
     '''
     if from_file:
         if type(data) is str:
@@ -112,19 +136,23 @@ def fit_ac(data, form='all', from_file = False, file_type='bt_ac', convert_time 
             #insert testing for power location in dataobject
             position = imported_data.position
             intensity = imported_data.power
+
+            if 'delay' in imported_data.__dict__:
+                delay = imported_data.delay
+            else:
+                delay = ac_x2t(position,aoi=15,config='sym')
+
             #get units from dataobject
         else:
             print('invalid filetype')
             return -1
 
     else:
-        position = data[0]
+        imported_data = data
+        delay = data[0]
         intensity = data[1]
 
-    if convert_time:
-        x = ac_x2t(position,angle=30,config='sym')
-    else:
-        x = position
+    x = delay
     y = intensity
 
     bgpar, bgform = _background(x,y,form = bgform)
@@ -184,6 +212,7 @@ def fit_ac(data, form='all', from_file = False, file_type='bt_ac', convert_time 
     #start fitting 
     popt=[]
     pcov=[]
+    fit_results=[]
     
     if type(bgpar) is np.float64:
         p0=[stdv,max(y)-min(y),mean,bgpar]
@@ -201,6 +230,8 @@ def fit_ac(data, form='all', from_file = False, file_type='bt_ac', convert_time 
         
         popt.append(poptGaus)
         pcov.append(pcovGaus)
+        fit_results.append(FitResult(ffunc=fitfuncGaus, ftype='gaussian',
+            popt=poptGaus, pcov=pcovGaus))
         
     if fitSech2:
         try:
@@ -211,8 +242,23 @@ def fit_ac(data, form='all', from_file = False, file_type='bt_ac', convert_time 
                        
         popt.append(poptSech2)
         pcov.append(pcovSech2)
+        fit_results.append(FitResult(ffunc=fitfuncSech2, ftype='sech2',
+            popt=poptSech2, pcov=pcovSech2))
 
-    return imported_data, np.array(popt), np.array(pcov)
+    return fit_results, imported_data
+
+
+def sigma_fwhm(sigma, shape='gaus'):
+    '''Convert sigma to full-width half-max
+    '''
+    if shape.lower() in alias_dict['gaus']:
+        A = 2*np.sqrt(2*np.log(2))
+    elif shape.lower() in alias_dict['sech2']:
+        A = 2*np.arccosh(np.sqrt(2))
+    else:
+        A = 1
+
+    return A*sigma
 
 
 def _background(x,y,form = 'constant'):
