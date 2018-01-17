@@ -8,7 +8,7 @@ Created Fri May 12
 
 import numpy as np
 
-__all__ = ['normalize','gaussian','sech2','lorentzian','gaussian2D','rk4','alias_dict']
+__all__ = ['normalize','rmbg','gaussian','sech2','lorentzian','gaussian2D','rk4','alias_dict']
 
 
 class Func:
@@ -26,10 +26,92 @@ class Func:
         return np.interp(x,self.ind,self.gradient)
 
 
+class FitResult():
+    def __init__(self, ffunc, ftype, popt, pcov=0, indep_var='time', bgform='constant'):
+        self.ffunc = ffunc
+        self.ftype = ftype
+        self.popt = popt
+        self.pcov = pcov
+        self.iv=indep_var
+
+    def subs(self,x):
+        return self.ffunc(x,*self.popt)
+
+    def get_args(self):
+        return inspect.getargspec(self.ffunc)
+
+
+class DataObj(dict):
+    def __init__(self,d):
+        self.__dict__ = d
+    def fields(self):
+        return self.__dict__.keys()
+    def properties(self):
+        [print(k,v) for k,v in file_formats[self.filetype].items()]
+        return
+
+
 def normalize(f, offset=0):
     '''Normalize array of data. Optional offset.
     '''
     return (f-f.min())/(f.max()-f.min()) + offset
+
+def rmbg(data, fit=None, form='constant'):
+    '''Removes background from data
+    if sending poly fit params: p[0]*x**(N-1) + ... + p[N-1]
+
+    '''
+    if fit is None:
+
+    elif isinstance(fit,FitResult):
+        if fit.bgform.lower() in alias_dict['constant']:
+            p=1
+        elif fit.bgform.lower() in alias_dict['linear']:
+            p=2
+        elif fit.bgform.lower() in alias_dict['quadratic']:
+            p=3
+        else:
+            p=1
+
+       fit.popts[-p:]
+
+    elif any([type(fit) is z for z in [list,np.array]]):
+        bg = np.polyval(fit,data[0])
+
+    else:
+        if form.lower() in alias_dict['constant']:
+        p = min(y)
+        #p = np.hstack((p,[0,0]))
+        
+        elif form.lower() in alias_dict['linear']:
+            p = np.linalg.solve([[1,x[0]],[1,x[-1]]], [y[0],y[-1]])
+            #p = np.hstack((p,0))
+
+        elif form.lower() in alias_dict['quadratic']:
+            index = np.argmin(y)
+            if index == 0:
+                x3 = 2*x[0]-x[-1]
+                y3 = y[-1]    
+            elif index == len(y)-1:
+                x3 = 2*x[-1]-x[0]
+                y3 = y[0]   
+            else:
+                x3 = x[index]
+                y3 = y[index]
+            
+            a = [[1,x[0],x[0]**2],[1,x[-1],x[-1]**2],[1,x3,x3**2]]
+            b = [y[0],y[-1],y3]
+            p = np.linalg.solve(a,b)
+            
+        else:
+            print('Unknown background form')
+            p = np.zeros((3))
+
+
+
+    return
+
+
 
 def gaussian(x,sigma,amp=1,x0=0,const=0):
     '''Gaussian distribution.

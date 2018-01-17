@@ -10,17 +10,10 @@ import csv
 import pickle
 
 from beamtools.file_formats import file_formats
+from beamtools.common import DataObj
+
 
 __all__ = ['import_data_file', 'list_atr','list_filetypes']
-
-class objdict(dict):
-    def __init__(self,d):
-        self.__dict__ = d
-    def fields(self):
-        return self.__dict__.keys()
-    def properties(self):
-        [print(k,v) for k,v in file_formats[self.filetype].items()]
-        return
 
 
 def list_filetypes():
@@ -83,6 +76,6 @@ def import_data_file(file, given_filetype):
 
     output.update({'header': header})
     output.update({'filetype': filetype})
-    output_obj = objdict(output)
+    output_obj = DataObj(output)
 
     return output_obj

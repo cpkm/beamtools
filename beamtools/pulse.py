@@ -11,28 +11,13 @@ import os.path
 import inspect
 
 from beamtools.constants import h,c,pi
-from beamtools.common import normalize, gaussian, sech2, alias_dict
+from beamtools.common import normalize, gaussian, sech2, alias_dict, FitResult
 from beamtools.import_data_file import import_data_file as _import
-from beamtools.import_data_file import objdict
+from beamtools.import_data_file import DataObj
 from scipy.optimize import curve_fit
 
 
 __all__ = ['autocorr','spectrumFT', 'fit_ac', 'ac_x2t', 'sigma_fwhm']
-
-
-class FitResult():
-    def __init__(self, ffunc, ftype, popt, pcov=0, indep_var='time'):
-        self.ffunc = ffunc
-        self.ftype = ftype
-        self.popt = popt
-        self.pcov = pcov
-        self.iv=indep_var
-
-    def subs(self,x):
-        return self.ffunc(x,*self.popt)
-
-    def get_args(self):
-        return inspect.getargspec(self.ffunc)
 
 
 def autocorr(x):
@@ -102,7 +87,7 @@ def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_int
     Et =np.fft.ifftshift((np.fft.ifft(np.fft.ifftshift(Ew)))[1:-1])
 
     output_dict = {'time': t, 'et': Et, 'nu': nui, 'ew': Ew}
-    output = objdict(output_dict)
+    output = DataObj(output_dict)
 
     return output, imported_data
 
@@ -244,7 +229,7 @@ def fit_ac(data, from_file = False, file_type='bt_ac', form='all', bgform = 'con
         popt.append(poptGaus)
         pcov.append(pcovGaus)
         fit_results.append(FitResult(ffunc=fitfuncGaus, ftype='gaussian',
-            popt=poptGaus, pcov=pcovGaus))
+            popt=poptGaus, pcov=pcovGaus, indep_var='time', bgform=bgform))
         
     if fitSech2:
         try:
@@ -256,7 +241,7 @@ def fit_ac(data, from_file = False, file_type='bt_ac', form='all', bgform = 'con
         popt.append(poptSech2)
         pcov.append(pcovSech2)
         fit_results.append(FitResult(ffunc=fitfuncSech2, ftype='sech2',
-            popt=poptSech2, pcov=pcovSech2))
+            popt=poptSech2, pcov=pcovSech2, indep_var='time', bgform=bgform))
 
     return fit_results, imported_data
 
@@ -300,15 +285,15 @@ def _background(x,y,form = 'constant'):
     if form is None:
         p = np.zeros((3))
 
-    if form.lower() in ['const','constant']:
+    if form.lower() in alias_dict['constant']:
         p = min(y)
         #p = np.hstack((p,[0,0]))
         
-    elif form.lower() in ['lin','linear']:
+    elif form.lower() in alias_dict['linear']:
         p = np.linalg.solve([[1,x[0]],[1,x[-1]]], [y[0],y[-1]])
         #p = np.hstack((p,0))
 
-    elif form.lower() in ['quad','quadratic']:
+    elif form.lower() in alias_dict['quadratic']:
         index = np.argmin(y)
         if index == 0:
             x3 = 2*x[0]-x[-1]
