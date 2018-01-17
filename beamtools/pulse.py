@@ -17,7 +17,7 @@ from beamtools.import_data_file import objdict
 from scipy.optimize import curve_fit
 
 
-__all__ = ['spectrumFT', 'fit_ac', 'ac_x2t', 'sigma_fwhm']
+__all__ = ['autocorr','spectrumFT', 'fit_ac', 'ac_x2t', 'sigma_fwhm']
 
 
 class FitResult():
@@ -35,6 +35,12 @@ class FitResult():
         return inspect.getargspec(self.ffunc)
 
 
+def autocorr(x):
+    '''Calculate autocorrelation of function
+    '''
+    return np.correlate(x, x, mode='same')
+
+
 def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_interp=0):
     '''Compute transform limited pulse from spectrum.
     data = wavelength vs. PSD (intensity) if from_file=False
@@ -44,6 +50,13 @@ def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_int
     Optional file_format, default is oceanoptics_spectrometer. Currently
     can not change this (filetype handling for x/y).
     n_interp = bit depth of frequency interpolation, n = 2**n_interp. 0 = auto
+    
+    Et/Ew are envelope fulctions of time/freq electric field
+    
+    w = 2pi*nu
+
+    S(w) = |Ew|**2
+    I(t) = |Et|**2
     '''
 
     if from_file:
@@ -81,14 +94,14 @@ def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_int
     #interpolate psd, linear freq spacing
     nui = np.linspace(min(nu),max(nu),n)
     df = (max(nu)-min(nu))/(n-1)
-    psdi = normalize(np.interp(nui,np.flipud(nu),np.flipud(psd)))
+    Ew = (normalize(np.interp(nui,np.flipud(nu),np.flipud(psd))))**(1/2)
     #i = (np.abs(nui-nu0)).argmin()     #centre freq index
 
     #perform FT-1, remove centre spike
     t = np.fft.ifftshift(np.fft.fftfreq(n,df)[1:-1])
-    ac =np.fft.ifftshift((np.fft.ifft(np.fft.ifftshift(psdi)))[1:-1])
+    Et =np.fft.ifftshift((np.fft.ifft(np.fft.ifftshift(Ew)))[1:-1])
 
-    output_dict = {'time': t, 'ac': ac, 'nu': nui, 'psd': psdi}
+    output_dict = {'time': t, 'et': Et, 'nu': nui, 'ew': Ew}
     output = objdict(output_dict)
 
     return output, imported_data
@@ -255,6 +268,24 @@ def sigma_fwhm(sigma, shape='gaus'):
         A = 2*np.sqrt(2*np.log(2))
     elif shape.lower() in alias_dict['sech2']:
         A = 2*np.arccosh(np.sqrt(2))
+    elif shape.lower() in alias_dict['lorentz']:
+        A = 1
+    else:
+        A = 1
+
+    return A*sigma
+
+
+def deconv(sigma, shape='gaus'):
+    '''Deconvolution factors
+    Go from sigma_ac --> sigma
+    '''
+    if shape.lower() in alias_dict['gaus']:
+        A = 1/np.sqrt(2)
+    elif shape.lower() in alias_dict['sech2']:
+        A = 0.6482
+    elif shape.lower() in alias_dict['lorentz']:
+        A = 0.5
     else:
         A = 1
 

@@ -131,6 +131,7 @@ def rk4(f, x, y0, const_args=[], abs_x=False):
 alias_dict = {
         'gaus': ('gaus','gaussian','g'),
         'sech2': ('sech2','secant squared','hyperbolic secant squared','s'),
+        'lorentz': ('lorentz','lorentzian','cauchy','cauchy-lorentz','l-c'),
         'GausFit': ('GausFit','gaus','gaussian'),
         'Sech2Fit': ('Sech2Fit', 'sech2','secant squared','hyperbolic secant squared'),
         'constant': ('constant','const','c'),
