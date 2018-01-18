@@ -32,7 +32,8 @@ class FitResult():
         self.ftype = ftype
         self.popt = popt
         self.pcov = pcov
-        self.iv=indep_var
+        self.iv = indep_var
+        self.bgform = bgform
 
     def subs(self,x):
         return self.ffunc(x,*self.popt)
@@ -58,34 +59,19 @@ def normalize(f, offset=0):
 
 def rmbg(data, fit=None, form='constant'):
     '''Removes background from data
+    data = [x,y]
     if sending poly fit params: p[0]*x**(N-1) + ... + p[N-1]
 
+    return --> y - background
     '''
     if fit is None:
-
-    elif isinstance(fit,FitResult):
-        if fit.bgform.lower() in alias_dict['constant']:
-            p=1
-        elif fit.bgform.lower() in alias_dict['linear']:
-            p=2
-        elif fit.bgform.lower() in alias_dict['quadratic']:
-            p=3
-        else:
-            p=1
-
-       fit.popts[-p:]
-
-    elif any([type(fit) is z for z in [list,np.array]]):
-        bg = np.polyval(fit,data[0])
-
-    else:
+        #estimate background from given form
         if form.lower() in alias_dict['constant']:
-        p = min(y)
-        #p = np.hstack((p,[0,0]))
+            p = min(y)
         
         elif form.lower() in alias_dict['linear']:
             p = np.linalg.solve([[1,x[0]],[1,x[-1]]], [y[0],y[-1]])
-            #p = np.hstack((p,0))
+            p = np.flipud(p)
 
         elif form.lower() in alias_dict['quadratic']:
             index = np.argmin(y)
@@ -102,14 +88,35 @@ def rmbg(data, fit=None, form='constant'):
             a = [[1,x[0],x[0]**2],[1,x[-1],x[-1]**2],[1,x3,x3**2]]
             b = [y[0],y[-1],y3]
             p = np.linalg.solve(a,b)
+            p = np.flipud(p)
             
         else:
             print('Unknown background form')
             p = np.zeros((3))
 
+    elif isinstance(fit,FitResult):
+        #get background from FitResult object
+        if fit.bgform.lower() in alias_dict['constant']:
+            p=1
+        elif fit.bgform.lower() in alias_dict['linear']:
+            p=2
+        elif fit.bgform.lower() in alias_dict['quadratic']:
+            p=3
+        else:
+            p=1
 
+        bg = np.polyval(fit.popt[-p:], data[0])
 
-    return
+    elif any([type(fit) is z for z in [list,np.array]]):
+        #background polynomial parameters supplied
+        bg = np.polyval(fit,data[0])
+
+    else:
+        #Unknown or error
+        print('Unknown fit argument.')
+        bg = 0
+
+    return data[1]-bg
 
 
 

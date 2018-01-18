@@ -171,15 +171,15 @@ def fit_ac(data, from_file = False, file_type='bt_ac', form='all', bgform = 'con
             return sech2(x,sigma,a,x0) + p0
         
     elif bgform.lower() in alias_dict['linear']:
-        def fitfuncGaus(x,sigma,a,x0,p0,p1):
+        def fitfuncGaus(x,sigma,a,x0,p1,p0):
             return gaussian(x,sigma,a,x0) + p1*x + p0
-        def fitfuncSech2(x,sigma,a,x0,p0,p1):
+        def fitfuncSech2(x,sigma,a,x0,p1,p0):
             return sech2(x,sigma,a,x0) + p1*x + p0
 
     elif bgform.lower() in alias_dict['quadratic']:
-        def fitfuncGaus(x,sigma,a,x0,p0,p1,p2):
+        def fitfuncGaus(x,sigma,a,x0,p2,p1,p0):
             return gaussian(x,sigma,a,x0) + p2*x**2 + p1*x + p0
-        def fitfuncSech2(x,sigma,a,x0,p0,p1,p2):
+        def fitfuncSech2(x,sigma,a,x0,p2,p1,p0):
             return sech2(x,sigma,a,x0) + p2*x**2 + p1*x + p0
     else:
         def fitfuncGaus(x,sigma,a,x0):
@@ -291,7 +291,7 @@ def _background(x,y,form = 'constant'):
         
     elif form.lower() in alias_dict['linear']:
         p = np.linalg.solve([[1,x[0]],[1,x[-1]]], [y[0],y[-1]])
-        #p = np.hstack((p,0))
+        p = np.flipud(p)
 
     elif form.lower() in alias_dict['quadratic']:
         index = np.argmin(y)
@@ -308,6 +308,7 @@ def _background(x,y,form = 'constant'):
         a = [[1,x[0],x[0]**2],[1,x[-1],x[-1]**2],[1,x3,x3**2]]
         b = [y[0],y[-1],y3]
         p = np.linalg.solve(a,b)
+        p = np.flipud(p)
         
     else:
         print('Unknown background form')
