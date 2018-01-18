@@ -10,16 +10,19 @@ import csv
 import pickle
 
 from beamtools.file_formats import file_formats
-from beamtools.common import DataObj
-
 
 __all__ = ['import_data_file', 'list_atr','list_filetypes']
 
+class objdict(dict):
+    def __init__(self,d):
+        self.__dict__ = d
+    def fields(self):
+        return self.__dict__.keys()
 
 def list_filetypes():
     '''Display all filetypes in dictionary
     '''
-    [print(k,v) for k,v in file_formats['filetype'].items()]
+    [print(k) for k in file_formats.keys()]
     return
 
 def list_atr(given_filetype):
@@ -75,7 +78,20 @@ def import_data_file(file, given_filetype):
                 pass
 
     output.update({'header': header})
-    output.update({'filetype': filetype})
-    output_obj = DataObj(output)
+    output_obj = objdict(output)
 
     return output_obj
+
+'''
+filedir = '/Users/cpkmanchee/Google Drive/PhD/Data/2016-11-22 DILAS temp profile'
+fileMON = '2016-11-22 MON temperature profile 10W.txt'
+filePOW = '2016-11-22 PM100 temperature profile 10W.txt'
+
+file = os.path.join(filedir,fileMON)
+file_type = 'monitor'
+
+data = import_data_file(file,file_type)
+print(data.time[0])
+'''
+
+

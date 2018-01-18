@@ -8,7 +8,7 @@ Created Fri May 12
 
 import numpy as np
 
-__all__ = ['normalize','rmbg','gaussian','sech2','lorentzian','gaussian2D','rk4','alias_dict']
+__all__ = ['normalize','gaussian','sech2','lorentzian','gaussian2D','rk4','alias_dict']
 
 
 class Func:
@@ -26,99 +26,10 @@ class Func:
         return np.interp(x,self.ind,self.gradient)
 
 
-class FitResult():
-    def __init__(self, ffunc, ftype, popt, pcov=0, indep_var='time', bgform='constant'):
-        self.ffunc = ffunc
-        self.ftype = ftype
-        self.popt = popt
-        self.pcov = pcov
-        self.iv = indep_var
-        self.bgform = bgform
-
-    def subs(self,x):
-        return self.ffunc(x,*self.popt)
-
-    def get_args(self):
-        return inspect.getargspec(self.ffunc)
-
-
-class DataObj(dict):
-    def __init__(self,d):
-        self.__dict__ = d
-    def fields(self):
-        return self.__dict__.keys()
-    def properties(self):
-        [print(k,v) for k,v in file_formats[self.filetype].items()]
-        return
-
-
 def normalize(f, offset=0):
     '''Normalize array of data. Optional offset.
     '''
     return (f-f.min())/(f.max()-f.min()) + offset
-
-def rmbg(data, fit=None, form='constant'):
-    '''Removes background from data
-    data = [x,y]
-    if sending poly fit params: p[0]*x**(N-1) + ... + p[N-1]
-
-    return --> y - background
-    '''
-    if fit is None:
-        #estimate background from given form
-        if form.lower() in alias_dict['constant']:
-            p = min(y)
-        
-        elif form.lower() in alias_dict['linear']:
-            p = np.linalg.solve([[1,x[0]],[1,x[-1]]], [y[0],y[-1]])
-            p = np.flipud(p)
-
-        elif form.lower() in alias_dict['quadratic']:
-            index = np.argmin(y)
-            if index == 0:
-                x3 = 2*x[0]-x[-1]
-                y3 = y[-1]    
-            elif index == len(y)-1:
-                x3 = 2*x[-1]-x[0]
-                y3 = y[0]   
-            else:
-                x3 = x[index]
-                y3 = y[index]
-            
-            a = [[1,x[0],x[0]**2],[1,x[-1],x[-1]**2],[1,x3,x3**2]]
-            b = [y[0],y[-1],y3]
-            p = np.linalg.solve(a,b)
-            p = np.flipud(p)
-            
-        else:
-            print('Unknown background form')
-            p = np.zeros((3))
-
-    elif isinstance(fit,FitResult):
-        #get background from FitResult object
-        if fit.bgform.lower() in alias_dict['constant']:
-            p=1
-        elif fit.bgform.lower() in alias_dict['linear']:
-            p=2
-        elif fit.bgform.lower() in alias_dict['quadratic']:
-            p=3
-        else:
-            p=1
-
-        bg = np.polyval(fit.popt[-p:], data[0])
-
-    elif any([type(fit) is z for z in [list,np.array]]):
-        #background polynomial parameters supplied
-        bg = np.polyval(fit,data[0])
-
-    else:
-        #Unknown or error
-        print('Unknown fit argument.')
-        bg = 0
-
-    return data[1]-bg
-
-
 
 def gaussian(x,sigma,amp=1,x0=0,const=0):
     '''Gaussian distribution.
@@ -220,7 +131,6 @@ def rk4(f, x, y0, const_args=[], abs_x=False):
 alias_dict = {
         'gaus': ('gaus','gaussian','g'),
         'sech2': ('sech2','secant squared','hyperbolic secant squared','s'),
-        'lorentz': ('lorentz','lorentzian','cauchy','cauchy-lorentz','l-c'),
         'GausFit': ('GausFit','gaus','gaussian'),
         'Sech2Fit': ('Sech2Fit', 'sech2','secant squared','hyperbolic secant squared'),
         'constant': ('constant','const','c'),
