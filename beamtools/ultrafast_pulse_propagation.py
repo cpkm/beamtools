@@ -15,8 +15,7 @@ import numpy as np
 import pickle
 
 from beamtools.constants import h, c, pi, mu0, eps0
-from beamtools.common import Func, normalize, rk4
-from beamtools.import_data_file import objdict
+from beamtools.common import Func, normalize, rk4, DataObj
 
 from tqdm import tqdm
 
