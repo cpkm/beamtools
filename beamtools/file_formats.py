@@ -17,7 +17,7 @@ file_formats = {'bt_regen_monitor':
                  },
             'thorlabs_pm': 
                 {'alias': ['thorlabs_pm','thor','thorlabs','pm100','pm'],
-                 'header_lines': 3,
+                 'header_lines': 2,
                  'number_data_columns': 3,
                  'column_labels': ['time','power','units'],
                  'column_units': ['', 'W', ''],
