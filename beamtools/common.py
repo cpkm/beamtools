@@ -7,6 +7,7 @@ Created Fri May 12
 '''
 
 import numpy as np
+from beamtools.file_formats import file_formats
 
 __all__ = ['normalize','rmbg','gaussian','sech2','lorentzian','gaussian2D','rk4','alias_dict']
 

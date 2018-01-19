@@ -14,6 +14,7 @@ file_formats = {'bt_regen_monitor':
                  'column_labels': ['time','current','power','crossover','t2','t2'],
                  'column_units': ['', 'A','W','ratio','degC','degC'],
                  'delimiter': '\t',
+                 'time_format': '%Y/%m/%d %H:%M:%S.%f',
                  },
             'thorlabs_pm': 
                 {'alias': ['thorlabs_pm','thor','thorlabs','pm100','pm'],
@@ -22,6 +23,7 @@ file_formats = {'bt_regen_monitor':
                  'column_labels': ['time','power','units'],
                  'column_units': ['', 'W', ''],
                  'delimiter': '\t',
+                 'time_format': '%m/%d/%Y %I:%M:%S.%f %p',
                  },
             'oceanoptics_spectrometer':
                 {'alias': ['oceanoptics_spectrometer','ocean_optics_spectrometer','oo_spectrometer','oospec','oo_spec','oo'],
