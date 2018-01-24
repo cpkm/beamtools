@@ -38,7 +38,7 @@ file_formats = {'bt_regen_monitor':
                  'header_lines': 0,
                  'number_data_columns': 3,
                  'column_labels': ['position', 'delay', 'power'],
-                 'column_units': ['mm', 'ps', 'W'],
+                 'column_units': ['um', 'ps', 'W'],
                  'delimiter': '\t',
                  },
             'bt_autocorrelator_old': 
@@ -46,7 +46,7 @@ file_formats = {'bt_regen_monitor':
                  'header_lines': 0,
                  'number_data_columns': 2,
                  'column_labels': ['position','power'],
-                 'column_units': ['mm', 'W'],
+                 'column_units': ['um', 'W'],
                  'delimiter': '\t',
                  },
             'bt_beamprofiler':
