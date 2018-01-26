@@ -8,11 +8,20 @@ Dictionary of file formats
 """
 
 file_formats = {'bt_regen_monitor': 
-                {'alias': ['regen_monitor','regen','monitor','mon'],
+                {'alias': ['bt_regen_monitor','regen_monitor','regen'],
                  'header_lines': 9,
                  'number_data_columns': 6,
-                 'column_labels': ['time','current','power','crossover','t2','t2'],
+                 'column_labels': ['time','current','power','crossover','t1','t2'],
                  'column_units': ['', 'A','W','ratio','degC','degC'],
+                 'delimiter': '\t',
+                 'time_format': '%Y/%m/%d %H:%M:%S.%f',
+                 },
+            'bt_rod_monitor': 
+                {'alias': ['bt_rod_monitor','rod_monitor','rod'],
+                 'header_lines': 9,
+                 'number_data_columns': 5,
+                 'column_labels': ['time','current','power','t1','t2'],
+                 'column_units': ['', 'A','W','degC','degC'],
                  'delimiter': '\t',
                  'time_format': '%Y/%m/%d %H:%M:%S.%f',
                  },
