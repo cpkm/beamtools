@@ -8,7 +8,9 @@ Created Fri May 12 2017
 
 import numpy as np
 import os.path
-import inspect
+
+from inspect import getargspec
+from warnings import warn
 
 from beamtools.constants import h,c,pi
 from beamtools.common import normalize, gaussian, sech2, alias_dict, FitResult
@@ -126,7 +128,7 @@ def fit_ac(data, from_file = False, file_type='bt_ac', form='all', bgform = 'con
     if from_file:
         if type(data) is str:
             if not os.path.exists(data):
-                print('File does not exist')
+                warn('File does not exist')
                 return -1
         
             imported_data = _import(data,file_type)
@@ -142,7 +144,7 @@ def fit_ac(data, from_file = False, file_type='bt_ac', form='all', bgform = 'con
 
             #get units from dataobject
         else:
-            print('invalid filetype')
+            warn('invalid filetype')
             return -1
 
     else:
@@ -187,7 +189,7 @@ def fit_ac(data, from_file = False, file_type='bt_ac', form='all', bgform = 'con
         def fitfuncSech2(x,sigma,a,x0):
             return sech2(x,sigma,a,x0)
 
-    nFitArgs = len(inspect.getargspec(fitfuncGaus).args) - 1
+    nFitArgs = len(getargspec(fitfuncGaus).args) - 1
 
 #sets which functions are to be fit... this can be streamlined i think
     if form.lower() in ['both', 'all']:
@@ -257,6 +259,7 @@ def sigma_fwhm(sigma, shape='gaus'):
         A = 1
     else:
         A = 1
+        warn('Pulse shape not recognized.')
 
     return A*sigma
 
@@ -273,6 +276,7 @@ def deconv(sigma, shape='gaus'):
         A = 0.5
     else:
         A = 1
+        warn('Pulse shape not recognized.')
 
     return A*sigma
 
@@ -311,7 +315,7 @@ def _background(x,y,form = 'constant'):
         p = np.flipud(p)
         
     else:
-        print('Unknown background form')
+        warn('Unknown background form')
         p = np.zeros((3))
         
     return p, form

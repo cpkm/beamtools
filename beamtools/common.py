@@ -7,6 +7,7 @@ Created Fri May 12
 '''
 
 import numpy as np
+from beamtools.file_formats import file_formats
 
 __all__ = ['normalize','rmbg','gaussian','sech2','lorentzian','gaussian2D','rk4','alias_dict']
 
@@ -52,10 +53,15 @@ class DataObj(dict):
         return
 
 
-def normalize(f, offset=0):
+def normalize(f, offset=0, method='normal'):
     '''Normalize array of data. Optional offset.
     '''
-    return (f-f.min())/(f.max()-f.min()) + offset
+    norm = (f-f.min())/(f.max()-f.min()) + offset
+
+    if method.lower() in ['area']:
+        norm = norm/np.sum(norm)
+
+    return norm
 
 def rmbg(data, fit=None, form='constant'):
     '''Removes background from data

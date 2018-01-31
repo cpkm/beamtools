@@ -8,20 +8,31 @@ Dictionary of file formats
 """
 
 file_formats = {'bt_regen_monitor': 
-                {'alias': ['regen_monitor','regen','monitor','mon'],
+                {'alias': ['bt_regen_monitor','regen_monitor','regen'],
                  'header_lines': 9,
                  'number_data_columns': 6,
-                 'column_labels': ['time','current','power','crossover','t2','t2'],
+                 'column_labels': ['time','current','power','crossover','t1','t2'],
                  'column_units': ['', 'A','W','ratio','degC','degC'],
                  'delimiter': '\t',
+                 'time_format': '%Y/%m/%d %H:%M:%S.%f',
+                 },
+            'bt_rod_monitor': 
+                {'alias': ['bt_rod_monitor','rod_monitor','rod'],
+                 'header_lines': 9,
+                 'number_data_columns': 5,
+                 'column_labels': ['time','current','power','t1','t2'],
+                 'column_units': ['', 'A','W','degC','degC'],
+                 'delimiter': '\t',
+                 'time_format': '%Y/%m/%d %H:%M:%S.%f',
                  },
             'thorlabs_pm': 
                 {'alias': ['thorlabs_pm','thor','thorlabs','pm100','pm'],
-                 'header_lines': 3,
+                 'header_lines': 2,
                  'number_data_columns': 3,
                  'column_labels': ['time','power','units'],
                  'column_units': ['', 'W', ''],
                  'delimiter': '\t',
+                 'time_format': '%m/%d/%Y %I:%M:%S.%f %p',
                  },
             'oceanoptics_spectrometer':
                 {'alias': ['oceanoptics_spectrometer','ocean_optics_spectrometer','oo_spectrometer','oospec','oo_spec','oo'],
@@ -36,7 +47,7 @@ file_formats = {'bt_regen_monitor':
                  'header_lines': 0,
                  'number_data_columns': 3,
                  'column_labels': ['position', 'delay', 'power'],
-                 'column_units': ['mm', 'ps', 'W'],
+                 'column_units': ['um', 'ps', 'W'],
                  'delimiter': '\t',
                  },
             'bt_autocorrelator_old': 
@@ -44,7 +55,7 @@ file_formats = {'bt_regen_monitor':
                  'header_lines': 0,
                  'number_data_columns': 2,
                  'column_labels': ['position','power'],
-                 'column_units': ['mm', 'W'],
+                 'column_units': ['um', 'W'],
                  'delimiter': '\t',
                  },
             'bt_beamprofiler':
