@@ -18,6 +18,7 @@ from beamtools.constants import h, c, pi, mu0, eps0
 from beamtools.common import Func, normalize, rk4, DataObj
 
 from tqdm import tqdm
+from copy import deepcopy
 
 
 class Pulse:
@@ -71,16 +72,14 @@ class Pulse:
         '''Duplicates pulse, outputs new pulse instance.
         Can set new At at same time by sending new_At. If not sent, new_pulse.At is same
         '''
+        new_pulse = deepcopy(self)
+        #new_pulse = Pulse(self.lambda0)
+        #new_pulse.time = self.time
+        #new_pulse.freq = self.freq
+        #new_pulse.nt = self.nt
+        #new_pulse.dt = self.dt
 
-        new_pulse = Pulse(self.lambda0)
-        new_pulse.time = self.time
-        new_pulse.freq = self.freq
-        new_pulse.nt = self.nt
-        new_pulse.dt = self.dt
-
-        if new_At is None:
-            new_pulse.At = self.At
-        else:
+        if new_At is not None:
             new_pulse.At = new_At
 
         return new_pulse
