@@ -22,7 +22,7 @@ import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 
-from beamtools import upp
+from beamtools import upp, h, c
 
 from tqdm import tqdm, trange
 
@@ -40,15 +40,15 @@ start_time = datetime.now().strftime("%H%M%S")
 #output_folder is outside of git repository in: code_folder/Code Output/...
 #if file is in code_folder/X/Y/Z, results are in code_folder/Code Output/X/Y/Z
 code_folder = '/Users/cpkmanchee/Documents/Code'
-output_folder = code_folder + '/Code Output' 
+output_folder = (code_folder + '/Code Output' 
                 + os.path.dirname(__file__).split(code_folder)[-1] + '/' 
-                + os.path.splitext(os.path.basename(__file__))[0] + '_output'
+                + os.path.splitext(os.path.basename(__file__))[0] + '_output')
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
-result_folder = output_folder + '/' 
-                + start_date + os.path.splitext(os.path.basename(__file__))[0]
+result_folder = (output_folder + '/' 
+                + start_date + os.path.splitext(os.path.basename(__file__))[0])
 
 dataset_num = 0
 while not not glob.glob((result_folder+'-'+str(dataset_num).zfill(2)+'*')):
@@ -56,8 +56,8 @@ while not not glob.glob((result_folder+'-'+str(dataset_num).zfill(2)+'*')):
 result_folder =  result_folder + '-' + str(dataset_num).zfill(2)
 os.makedirs(result_folder)
 
-filebase = result_folder + '/' + start_date + '-' 
-            + start_time + '-' + str(dataset_num).zfill(2)
+filebase = (result_folder + '/' + start_date + '-' 
+            + start_time + '-' + str(dataset_num).zfill(2))
 fileext = '.pkl'
 output_num = 0
 filename =  filebase + 'pulse' + str(output_num).zfill(3) + fileext
@@ -75,7 +75,7 @@ def savepulse(pulse, name='pulse'):
     while not not glob.glob(filename):
         output_num = output_num + 1
         filename = filebase + name + str(output_num).zfill(3) + fileext
-    upp.saveObj(pulse,filename)
+    upp.save_obj(pulse,filename)
 
 
 def cavity(pulse,auto_z_step=False):
@@ -91,9 +91,41 @@ def cavity(pulse,auto_z_step=False):
     ydf1.gain = upp.calc_gain(ydf1,p1P,Ps)
     pulse.At = upp.propagate_fiber(pulse,ydf1,autodz=False)
 
+    pulse.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
+    pulse.At,_ = upp.power_tap(pulse, 0, loss=0.06)
+    pulse.At = upp.propagate_fiber(pulse,smf2,autodz=auto_z_step)
+    pulse.At,_ = upp.power_tap(pulse, 0, loss=0.06)
+    pulse.At = upp.propagate_fiber(pulse,smf2,autodz=auto_z_step)
+    
+    nalmp = pulse.copyPulse()
+    pulse.At, nalmp.At = upp.coupler_2x2(pulse, None, tap=50, loss=0.06)
+
+    Psn = np.sum(np.abs(pulse.At)**2)*pulse.dt/tau_rt
+    ydf2.gain = upp.calc_gain(ydf2,p2P,Psn)
+
+    #main pulse
+    pulse.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
+    pulse.At = upp.propagate_fiber(pulse,ydf2,autodz=False)
+    pulse.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
+    pulse.At,_ = upp.power_tap(pulse, 0, loss=0.06)
+    pulse.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
+    pulse.At = upp.propagate_fiber(pulse,smf3,autodz=auto_z_step)
+
+    #nalmp
+    nalmp.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
+    nalmp.At = upp.propagate_fiber(pulse,smf3,autodz=auto_z_step)
+    nalmp.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
+    nalmp.At,_ = upp.power_tap(pulse, 0, loss=0.06)
+    nalmp.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
+    nalmp.At = upp.propagate_fiber(pulse,ydf2,autodz=False)
+    nalmp.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
+
+    pulse.At,_  = upp.coupler_2x2(nalmp,pulse, tap=50, loss=0.06)
+    pulse.At = upp.propagate_fiber(pulse,smf2,autodz=auto_z_step)
+    pulse.At = upp.optical_filter(pulse, filter_type='bpf', bandwidth=2E-9, loss=0.06)
     pulse.At = upp.propagate_fiber(pulse,smf2,autodz=auto_z_step)
 
-    pulse.At, output_At = upp.coupler_2x2(pulse,None,tap=25)
+    pulse.At, output_At = upp.coupler_2x2(pulse, None, tap=75, loss=0.06)
 
     return pulse.At, output_At
 
@@ -114,7 +146,7 @@ def run_sim(
         input_At = pulse.At
         cavity_At, output_At = cavity(pulse, auto_z_step)
 
-        if (i+1)%N == 0
+        if (i+1)%N == 0:
             savepulse(pulse, name='cavity')
             savepulse(pulse.copyPulse(output_At), name='output')
 
@@ -125,9 +157,10 @@ def run_sim(
             integ_err=err_thresh, p2p_err=err_thresh)
 
         if test[0]:
-                if save_pulse is not False:
-                    savepulse(pulse,name='cavity')
-                    savepulse(pulse.copyPulse(output_At), name='output')
+            if save_pulse is not False:
+                savepulse(pulse,name='cavity')
+                savepulse(pulse.copyPulse(output_At), name='output')
+
             break
 
         t.set_postfix(str='{:.1e},{:.1e}'.format(test[1],test[2]))
@@ -151,24 +184,18 @@ def check_residuals(initial, final, integ_err=1E-4, p2p_err=1E-4):
         return False,integ,p2p
 
 
-#constants
-h = upp.h  #J*s
-c = upp.c     #m/s
-
 #Define Pulse Object
 pulse = upp.Pulse(1.03E-6)
 pulse.initializeGrid(18, 1.5E-9)
-T0 = 1000E-15
+T0 = 500E-15
 mshape = 1
 chirp0 = 0
-P_peak = 10E3   #peak power, 10kW-->1ps pulse, 400mW avg @ 40MHz
+P_peak = 1E3   #peak power, 10kW-->1ps pulse, 400mW avg @ 40MHz
 pulse.At = np.sqrt(P_peak)*(
             sp.exp(-(1/(2*T0**2))*(1+1j*chirp0)*pulse.time**(2*mshape)))
 
-input_pulse = pulse.copyPulse()
-
 #Define fiber components
-smf1 = upp.Fiber(2.0)
+smf1 = upp.Fiber(0.65)
 smf1.alpha = 0.000576
 smf1.beta = np.array([
             0.0251222977, 
@@ -177,27 +204,12 @@ smf1.beta = np.array([
 smf1.gamma = 0.00045
 smf1.core_d = 5.5E-6
 
-smf2 = upp.Fiber(1.0)
-smf2.alpha = 0.000576
-smf2.beta = np.array([
-            0.0251222977, 
-            4.5522276126132602e-05, 
-            -5.0542788517531417e-08])*(1E-12)**(np.array([2,3,4]))
-smf2.gamma = 0.00045
-smf2.core_d = 5.5E-6
-
-smf3 = upp.Fiber(1.0)
-smf3.alpha = 0.000576
-smf3.beta = np.array([
-            0.0251222977, 
-            4.5522276126132602e-05, 
-            -5.0542788517531417e-08])*(1E-12)**(np.array([2,3,4]))
-smf3.gamma = 0.00045
-smf3.core_d = 5.5E-6
+smf2 = smf1.copyFiber(length=1.3)
+smf3 = smf1.copyFiber(length=5.0)
 
 
 #gain fiber, nufern ysf-HI
-ydf1 = upp.FiberGain(0.6, grid_type='rel',z_grid=100)
+ydf1 = upp.FiberGain(0.65, grid_type='rel',z_grid=100)
 ydf1.alpha = 0.00345
 ydf1.beta = np.array([
             0.0251222977, 
@@ -210,38 +222,13 @@ ydf1.lambdas = np.array([0.976,1.030])*1E-6
 ydf1.core_d = 6.0E-6
 ydf1.N = 1.891669E25
 
+ydf2 = ydf1.copyFiber()
+
 #Pump parameters
-p1P = 0.1    #pump power, CW
+pP = 0.1    #pump power, CW
+Rp = 0.5
+p1P = Rp*pP
+p2P = (1-Rp)*pP
 
-
-'''
-#Plotting
-tau = pulse.time
-omega = pulse.freq
-
-#create plot figure
-fieldPlot, (t_ax, f_ax) = plt.subplots(2)   #set up plot figure
-fieldPlot.suptitle('Pulse propagation profile')
-
-#plot input
-t_input, = t_ax.plot(tau,np.abs(pulse.At)**2, 'b--')    #plot time profile
-t_ax.set_xlabel('Time (s)')
-f_ax.plot(np.fft.fftshift(pulse.freq)/(2*np.pi),np.fft.fftshift(np.abs(pulse.getAf())**2), 'b--')  #plot freq profile
-f_ax.set_xlabel('Frequency shift (Hz)')
-
-
-t01, sig1 = upp.rmswidth(pulse.time,np.abs(pulse.At)**2)
-output = upp.gratingPair(pulse, 1.0, 1500, 45)
-t02, sig2 = upp.rmswidth(pulse.time,np.abs(output)**2)
-
-input = pulse.At
-pulse.At = output
-
-#plot output
-t_output, = t_ax.plot(tau,np.abs(pulse.At)**2, 'b-')    #plot time profile
-t_ax.set_xlabel('Time (s)')
-f_ax.plot(np.fft.fftshift(pulse.freq)/(2*np.pi),np.fft.fftshift(np.abs(pulse.getAf())**2), 'b-')  #plot freq profile
-f_ax.set_xlabel('Frequency shift (Hz)')
-
-plt.figlegend((t_input,t_output), ('Input', 'Output'), 'center right')
-'''
+#Cavity
+tau_rt = 1/(13.1E6)
