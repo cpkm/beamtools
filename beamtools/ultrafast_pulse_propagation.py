@@ -148,6 +148,17 @@ class Fiber:
             dz = self.length/z_grid   #position step size
             self.z = dz*np.arange(0, z_grid)    #position array
 
+    def copyFiber(self, length=None):
+        '''Duplicates Fiber, outputs new fiber instance.
+        Can set new length at same time. If not sent, new_fiber.length is same.
+        '''
+        new_fiber = deepcopy(self)
+
+        if length is not None:
+            new_fiber.length = length
+
+        return new_fiber
+
 
 class FiberGain:
     '''
@@ -239,6 +250,17 @@ class FiberGain:
             self.gain = np.interp(self.z,old_z,self.gain[:np.size(old_z)])
         else:
             self.gain = np.zeros(np.size(self.z))
+
+    def copyFiber(self, length=None):
+        '''Duplicates Fiber, outputs new fiber instance.
+        Can set new length at same time. If not sent, new_fiber.length is same.
+        '''
+        new_fiber = deepcopy(self)
+
+        if length is not None:
+            new_fiber.length = length
+
+        return new_fiber
             
 
 def save_obj(obj, filename):
