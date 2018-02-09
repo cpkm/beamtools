@@ -19,7 +19,6 @@ Everything is in SI units: m,s,W,J etc.
 """
 
 import numpy as np
-import scipy as sp
 import matplotlib.pyplot as plt
 
 from beamtools import upp, h, c
@@ -112,17 +111,17 @@ def cavity(pulse,auto_z_step=False):
     pulse.At = upp.propagate_fiber(pulse,smf3,autodz=auto_z_step)
 
     #nalmp
-    nalmp.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
-    nalmp.At = upp.propagate_fiber(pulse,smf3,autodz=auto_z_step)
-    nalmp.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
-    nalmp.At,_ = upp.power_tap(pulse, 0, loss=0.06)
-    nalmp.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
-    nalmp.At = upp.propagate_fiber(pulse,ydf2,autodz=False)
-    nalmp.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
+    nalmp.At = upp.propagate_fiber(nalmp,smf1,autodz=auto_z_step)
+    nalmp.At = upp.propagate_fiber(nalmp,smf3,autodz=auto_z_step)
+    nalmp.At = upp.propagate_fiber(nalmp,smf1,autodz=auto_z_step)
+    nalmp.At,_ = upp.power_tap(nalmp, 0, loss=0.06)
+    nalmp.At = upp.propagate_fiber(nalmp,smf1,autodz=auto_z_step)
+    nalmp.At = upp.propagate_fiber(nalmp,ydf2,autodz=False)
+    nalmp.At = upp.propagate_fiber(nalmp,smf1,autodz=auto_z_step)
 
-    pulse.At,_  = upp.coupler_2x2(nalmp,pulse, tap=50, loss=0.06)
+    pulse.At,_  = upp.coupler_2x2(pulse, nalmp, tap=50, loss=0.06)
     pulse.At = upp.propagate_fiber(pulse,smf2,autodz=auto_z_step)
-    pulse.At = upp.optical_filter(pulse, filter_type='bpf', bandwidth=2E-9, loss=0.06)
+    pulse.At = upp.optical_filter(pulse, filter_type='bpf', bandwidth=2E-9, loss=0.06, order=2)
     pulse.At = upp.propagate_fiber(pulse,smf2,autodz=auto_z_step)
 
     pulse.At, output_At = upp.coupler_2x2(pulse, None, tap=75, loss=0.06)
@@ -140,11 +139,16 @@ def run_sim(
     else:
         N = max_iter + 1
 
+    f,ax = initialize_plot(10)
+    update_pulse_plot(pulse,f,ax)
+
     t = trange(max_iter, desc='Total progress')
     t.set_postfix(str='{:.1e}'.format(0))
     for i in t:
         input_At = pulse.At
         cavity_At, output_At = cavity(pulse, auto_z_step)
+
+        update_pulse_plot(pulse,f,ax)
 
         if (i+1)%N == 0:
             savepulse(pulse, name='cavity')
@@ -184,15 +188,53 @@ def check_residuals(initial, final, integ_err=1E-4, p2p_err=1E-4):
         return False,integ,p2p
 
 
+def initialize_plot(N,colormap=plt.cm.viridis):
+    '''Set up plotting figure for sim.'''
+    plt.ion()
+    cm = colormap
+
+    f, ax = plt.subplots(1,2)
+    [[a.plot([],[],c=cm(i/(N-1)),zorder=i)[0] for _,i in enumerate(range(N))] for a in ax]
+    ax[0].set_xlim([-2E-11,2E-11])
+    ax[0].set_xlabel('Tau (s)')
+    ax[1].set_xlim([-5E12,5E12])
+    ax[1].set_xlabel('Omega ($s^{-1}$)')
+
+    plt.show()
+    plt.pause(0.001)
+
+    return f,ax
+
+def update_pulse_plot(pulse,fig,ax):
+    '''Update pulse plot'''
+    #Update time plots
+    lines = ax[0].lines
+    N = len(lines)
+    i = np.argmin([li.zorder for li in lines])
+    lines[i].set_data(pulse.time,pulse.getPt())
+    lines[i].zorder += N
+    ax[0].set_ylim([0,np.max(pulse.getPt())])
+    plt.pause(0.001)
+
+    lines = ax[1].lines
+    N = len(lines)
+    i = np.argmin([li.zorder for li in lines])
+    lines[i].set_data(np.fft.fftshift(pulse.freq),np.fft.fftshift(pulse.getPf()))
+    lines[i].zorder += N
+    ax[1].set_ylim([0,np.max(pulse.getPf())])
+    plt.pause(0.001)
+
+
+
 #Define Pulse Object
 pulse = upp.Pulse(1.03E-6)
-pulse.initializeGrid(18, 1.5E-9)
-T0 = 500E-15
+pulse.initializeGrid(16, 1.5E-9)
+T0 = 200E-15
 mshape = 1
 chirp0 = 0
-P_peak = 1E3   #peak power, 10kW-->1ps pulse, 400mW avg @ 40MHz
+P_peak = 1E1   #peak power, 10kW-->1ps pulse, 400mW avg @ 40MHz
 pulse.At = np.sqrt(P_peak)*(
-            sp.exp(-(1/(2*T0**2))*(1+1j*chirp0)*pulse.time**(2*mshape)))
+            np.exp(-((1+1j*chirp0)/(2*T0**2))*pulse.time**(2*mshape)))
 
 #Define fiber components
 smf1 = upp.Fiber(0.65)
@@ -225,7 +267,7 @@ ydf1.N = 1.891669E25
 ydf2 = ydf1.copyFiber()
 
 #Pump parameters
-pP = 0.1    #pump power, CW
+pP = 0.25    #pump power, CW
 Rp = 0.5
 p1P = Rp*pP
 p2P = (1-Rp)*pP
