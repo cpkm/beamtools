@@ -15,7 +15,7 @@ import numpy as np
 import pickle
 
 from beamtools.constants import h, c, pi, mu0, eps0
-from beamtools.common import Func, normalize, rk4, DataObj
+from beamtools.common import Func, gaussian, normalize, rk4, DataObj
 
 from tqdm import tqdm
 from copy import deepcopy
@@ -662,7 +662,7 @@ def coupler_2x2(pulse1, pulse2, tap, loss=0):
     return output_signal, output_tap
 
 
-def optical_filter(pulse, filter_type, lambda0=None, bandwidth=2E-9, loss=0):
+def optical_filter(pulse, filter_type, lambda0=None, bandwidth=2E-9, loss=0, order=1):
     '''
     Simulate filter, bandpass, longpass, shortpass
     default bandwidth is 2nm
@@ -699,8 +699,9 @@ def optical_filter(pulse, filter_type, lambda0=None, bandwidth=2E-9, loss=0):
         bandpass
         '''
         dw = w0*(bandwidth/lambda0)
-
-        filter_profile = (0.5*(np.sign(w0-w+dw/2) + 1))*(0.5 * (np.sign(w-w0+dw/2) + 1))
+        bw=dw*(np.log(2)/2)
+        #filter_profile = (0.5*(np.sign(w0-w+dw/2) + 1))*(0.5 * (np.sign(w-w0+dw/2) + 1))
+        filter_profile = gaussian(w,bw,1,w0,sg=order)
 
     else:
         '''
