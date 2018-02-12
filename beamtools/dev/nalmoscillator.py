@@ -109,6 +109,7 @@ def cavity(pulse,auto_z_step=False):
     pulse.At,_ = upp.power_tap(pulse, 0, loss=0.06)
     pulse.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
     pulse.At = upp.propagate_fiber(pulse,smf3,autodz=auto_z_step)
+    pulse.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
 
     #nalmp
     nalmp.At = upp.propagate_fiber(nalmp,smf1,autodz=auto_z_step)
@@ -225,8 +226,8 @@ def update_pulse_plot(pulse,fig,ax):
     plt.pause(0.001)
 
 
-
 #Define Pulse Object
+'''
 pulse = upp.Pulse(1.03E-6)
 pulse.initializeGrid(16, 1.5E-9)
 T0 = 200E-15
@@ -235,9 +236,14 @@ chirp0 = 0
 P_peak = 1E1   #peak power, 10kW-->1ps pulse, 400mW avg @ 40MHz
 pulse.At = np.sqrt(P_peak)*(
             np.exp(-((1+1j*chirp0)/(2*T0**2))*pulse.time**(2*mshape)))
+'''
+folder = ('/Users/cpkmanchee/Documents/Code/Code Output/'
+            'beamtools/beamtools/dev/nalmoscillator_output/20180208nalmoscillator-36/')
+cavity_file= '20180208-200922-36cavity005.pkl'
+pulse = upp.load_obj(folder+cavity_file)
 
 #Define fiber components
-smf1 = upp.Fiber(0.65)
+smf1 = upp.Fiber(0.72142857)
 smf1.alpha = 0.000576
 smf1.beta = np.array([
             0.0251222977, 
@@ -246,7 +252,7 @@ smf1.beta = np.array([
 smf1.gamma = 0.00045
 smf1.core_d = 5.5E-6
 
-smf2 = smf1.copyFiber(length=1.3)
+smf2 = smf1.copyFiber(length=1.44285714)
 smf3 = smf1.copyFiber(length=5.0)
 
 
@@ -267,7 +273,7 @@ ydf1.N = 1.891669E25
 ydf2 = ydf1.copyFiber()
 
 #Pump parameters
-pP = 0.25    #pump power, CW
+pP = 0.15    #pump power, CW
 Rp = 0.5
 p1P = Rp*pP
 p2P = (1-Rp)*pP
