@@ -68,16 +68,32 @@ class Pulse:
         '''
         return np.abs(self.getAf())**2
 
+    def phase(self):
+        '''Yeild phase of temporal field'''
+        return np.angle(self.At)
+
+    def chirp(self):
+        '''return chirp
+        time derivative of phase
+        Need to manually calc differences due to np.gradient causing spikes.
+        Spikes occur when phase angle flips from +/-. Gradient gives wrong 'quadrant'.
+        Linear approximation which is OK for even spaced x, which it is (self.time).
+        '''
+        ph=self.phase()
+        self.dt
+
+        ch=np.array([np.arctan2(np.sin(ph[i+2]-ph[i]),np.cos(ph[i+2]-ph[i]))/(2*dt) for i in range(ph[1:-1].size)])
+        ch = np.insert(ch, 0,(ph[1] - ph[0])/dt)
+        ch = np.insert(ch,-1,(ph[-1]-ph[-2])/dt)
+
+        return ch
+
+
     def copyPulse(self, new_At=None):
         '''Duplicates pulse, outputs new pulse instance.
         Can set new At at same time by sending new_At. If not sent, new_pulse.At is same
         '''
         new_pulse = deepcopy(self)
-        #new_pulse = Pulse(self.lambda0)
-        #new_pulse.time = self.time
-        #new_pulse.freq = self.freq
-        #new_pulse.nt = self.nt
-        #new_pulse.dt = self.dt
 
         if new_At is not None:
             new_pulse.At = new_At
@@ -717,6 +733,7 @@ def optical_filter(pulse, filter_type, lambda0=None, bandwidth=2E-9, loss=0, ord
 def saturable_abs(pulse,sat_int,spot_size,mod_depth=1,loss=0):
     ''' Simulate saturable absorber.
     sat_int = saturation intensity, J/m**2
+    ***NOTE energy density, NOT intensity***
     spot_size = beam diameter
     mod_depth = modulation depth, ratio e.g. 1% -> 0.01
     loss = non saturable losses
@@ -724,7 +741,7 @@ def saturable_abs(pulse,sat_int,spot_size,mod_depth=1,loss=0):
     small signal -> refl ~ 1-loss-mod_depth
     high signal --> refl ~ 1-loss
     '''
-    intensity = np.abs(pulse.At)**2/(np.pi*(spot_size/2)**2)
+    intensity = pulse.dt*np.abs(pulse.At)**2/(np.pi*(spot_size/2)**2)
     outputField = np.sqrt(1-loss)*pulse.At*np.sqrt((1-mod_depth/(1+intensity/sat_int)))
 
     return outputField
