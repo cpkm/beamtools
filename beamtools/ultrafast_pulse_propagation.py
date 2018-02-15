@@ -15,9 +15,10 @@ import numpy as np
 import pickle
 
 from beamtools.constants import h, c, pi, mu0, eps0
-from beamtools.common import Func, normalize, rk4, DataObj
+from beamtools.common import Func, gaussian, normalize, rk4, DataObj
 
 from tqdm import tqdm
+from copy import deepcopy
 
 
 class Pulse:
@@ -67,20 +68,34 @@ class Pulse:
         '''
         return np.abs(self.getAf())**2
 
+    def phase(self):
+        '''Yeild phase of temporal field'''
+        return np.angle(self.At)
+
+    def chirp(self):
+        '''return chirp
+        time derivative of phase
+        Need to manually calc differences due to np.gradient causing spikes.
+        Spikes occur when phase angle flips from +/-. Gradient gives wrong 'quadrant'.
+        Linear approximation which is OK for even spaced x, which it is (self.time).
+        '''
+        ph=self.phase()
+        self.dt
+
+        ch=np.array([np.arctan2(np.sin(ph[i+2]-ph[i]),np.cos(ph[i+2]-ph[i]))/(2*dt) for i in range(ph[1:-1].size)])
+        ch = np.insert(ch, 0,(ph[1] - ph[0])/dt)
+        ch = np.insert(ch,-1,(ph[-1]-ph[-2])/dt)
+
+        return ch
+
+
     def copyPulse(self, new_At=None):
         '''Duplicates pulse, outputs new pulse instance.
         Can set new At at same time by sending new_At. If not sent, new_pulse.At is same
         '''
+        new_pulse = deepcopy(self)
 
-        new_pulse = Pulse(self.lambda0)
-        new_pulse.time = self.time
-        new_pulse.freq = self.freq
-        new_pulse.nt = self.nt
-        new_pulse.dt = self.dt
-
-        if new_At is None:
-            new_pulse.At = self.At
-        else:
+        if new_At is not None:
             new_pulse.At = new_At
 
         return new_pulse
@@ -148,6 +163,17 @@ class Fiber:
 
             dz = self.length/z_grid   #position step size
             self.z = dz*np.arange(0, z_grid)    #position array
+
+    def copyFiber(self, length=None):
+        '''Duplicates Fiber, outputs new fiber instance.
+        Can set new length at same time. If not sent, new_fiber.length is same.
+        '''
+        new_fiber = deepcopy(self)
+
+        if length is not None:
+            new_fiber.length = length
+
+        return new_fiber
 
 
 class FiberGain:
@@ -240,6 +266,17 @@ class FiberGain:
             self.gain = np.interp(self.z,old_z,self.gain[:np.size(old_z)])
         else:
             self.gain = np.zeros(np.size(self.z))
+
+    def copyFiber(self, length=None):
+        '''Duplicates Fiber, outputs new fiber instance.
+        Can set new length at same time. If not sent, new_fiber.length is same.
+        '''
+        new_fiber = deepcopy(self)
+
+        if length is not None:
+            new_fiber.length = length
+
+        return new_fiber
             
 
 def save_obj(obj, filename):
@@ -641,7 +678,7 @@ def coupler_2x2(pulse1, pulse2, tap, loss=0):
     return output_signal, output_tap
 
 
-def optical_filter(pulse, filter_type, lambda0=None, bandwidth=2E-9, loss=0):
+def optical_filter(pulse, filter_type, lambda0=None, bandwidth=2E-9, loss=0, order=1):
     '''
     Simulate filter, bandpass, longpass, shortpass
     default bandwidth is 2nm
@@ -678,8 +715,9 @@ def optical_filter(pulse, filter_type, lambda0=None, bandwidth=2E-9, loss=0):
         bandpass
         '''
         dw = w0*(bandwidth/lambda0)
-
-        filter_profile = (0.5*(np.sign(w0-w+dw/2) + 1))*(0.5 * (np.sign(w-w0+dw/2) + 1))
+        bw=dw*(np.log(2)/2)
+        #filter_profile = (0.5*(np.sign(w0-w+dw/2) + 1))*(0.5 * (np.sign(w-w0+dw/2) + 1))
+        filter_profile = gaussian(w,bw,1,w0,sg=order)
 
     else:
         '''
@@ -695,6 +733,7 @@ def optical_filter(pulse, filter_type, lambda0=None, bandwidth=2E-9, loss=0):
 def saturable_abs(pulse,sat_int,spot_size,mod_depth=1,loss=0):
     ''' Simulate saturable absorber.
     sat_int = saturation intensity, J/m**2
+    ***NOTE energy density, NOT intensity***
     spot_size = beam diameter
     mod_depth = modulation depth, ratio e.g. 1% -> 0.01
     loss = non saturable losses
@@ -702,7 +741,7 @@ def saturable_abs(pulse,sat_int,spot_size,mod_depth=1,loss=0):
     small signal -> refl ~ 1-loss-mod_depth
     high signal --> refl ~ 1-loss
     '''
-    intensity = np.abs(pulse.At)**2/(np.pi*(spot_size/2)**2)
+    intensity = pulse.dt*np.abs(pulse.At)**2/(np.pi*(spot_size/2)**2)
     outputField = np.sqrt(1-loss)*pulse.At*np.sqrt((1-mod_depth/(1+intensity/sat_int)))
 
     return outputField
