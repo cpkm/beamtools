@@ -74,48 +74,24 @@ def cavity(pulse,auto_z_step=False):
         pulse.At = current pulse profile
         output_At = cavity output (outcoupled) profile
     '''
+    pulse.At = upp.grating_pair(pulse, L_g, N_g, AOI_g, loss = ref_loss_g, return_coef = False)
+
     pulse.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
+
 
     Ps = np.sum(np.abs(pulse.At)**2)*pulse.dt/tau_rt
     ydf1.gain = upp.calc_gain(ydf1,p1P,Ps)
     pulse.At = upp.propagate_fiber(pulse,ydf1,autodz=False)
-
-    pulse.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
-    pulse.At,_ = upp.power_tap(pulse, 0, loss=0.06)
-    pulse.At = upp.propagate_fiber(pulse,smf2,autodz=auto_z_step)
-    pulse.At,_ = upp.power_tap(pulse, 0, loss=0.06)
-    pulse.At = upp.propagate_fiber(pulse,smf2,autodz=auto_z_step)
     
-    nalmp = pulse.copyPulse()
-    pulse.At, nalmp.At = upp.coupler_2x2(pulse, None, tap=50, loss=0.06)
+    pulse.At = upp.optical_filter(pulse, filter_type='bpf', bandwidth=30E-9, loss=0.06, order=1)
 
-    Psn = np.sum(np.abs(pulse.At)**2)*pulse.dt/tau_rt
-    ydf2.gain = upp.calc_gain(ydf2,p2P,Psn)
-
-    #main pulse
-    pulse.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
-    pulse.At = upp.propagate_fiber(pulse,ydf2,autodz=False)
-    pulse.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
-    pulse.At,_ = upp.power_tap(pulse, 0, loss=0.06)
-    pulse.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
-    pulse.At = upp.propagate_fiber(pulse,smf3,autodz=auto_z_step)
-    pulse.At = upp.propagate_fiber(pulse,smf1,autodz=auto_z_step)
-
-    #nalmp
-    nalmp.At = upp.propagate_fiber(nalmp,smf1,autodz=auto_z_step)
-    nalmp.At = upp.propagate_fiber(nalmp,smf3,autodz=auto_z_step)
-    nalmp.At = upp.propagate_fiber(nalmp,smf1,autodz=auto_z_step)
-    nalmp.At,_ = upp.power_tap(nalmp, 0, loss=0.06)
-    nalmp.At = upp.propagate_fiber(nalmp,smf1,autodz=auto_z_step)
-    nalmp.At = upp.propagate_fiber(nalmp,ydf2,autodz=False)
-    nalmp.At = upp.propagate_fiber(nalmp,smf1,autodz=auto_z_step)
-
-    pulse.At,_  = upp.coupler_2x2(pulse, nalmp, tap=50, loss=0.06)
-    pulse.At = upp.propagate_fiber(pulse,smf2,autodz=auto_z_step)
-    pulse.At = upp.optical_filter(pulse, filter_type='bpf', bandwidth=2E-9, loss=0.06, order=2)
     pulse.At = upp.propagate_fiber(pulse,smf2,autodz=auto_z_step)
 
-    pulse.At, output_At = upp.coupler_2x2(pulse, None, tap=75, loss=0.06)
+    pulse.At = upp.saturable_abs(pulse,sat_int_sa,d_sa,mod_depth_sa,loss_sa)
+    
+    pulse.At = upp.optical_filter(pulse, filter_type='bpf', bandwidth=30E-9, loss=0.06, order=2)
+    
+    pulse.At, output_At = upp.coupler_2x2(pulse,None,tap=10)
 
     return pulse.At, output_At
 
@@ -188,7 +164,7 @@ def initialize_plot(N,colormap=plt.cm.viridis):
     [[a.plot([],[],c=cm(i/(N-1)),zorder=i)[0] for _,i in enumerate(range(N))] for a in ax]
     ax[0].set_xlim([-2E-11,2E-11])
     ax[0].set_xlabel('Tau (s)')
-    ax[1].set_xlim([-5E12,5E12])
+    ax[1].set_xlim([-5E13,5E13])
     ax[1].set_xlabel('Omega ($s^{-1}$)')
 
     plt.show()
@@ -217,23 +193,22 @@ def update_pulse_plot(pulse,fig,ax):
 
 
 #Define Pulse Object
-'''
 pulse = upp.Pulse(1.03E-6)
 pulse.initializeGrid(16, 1.5E-9)
-T0 = 200E-15
+T0 = 700E-15
 mshape = 1
-chirp0 = 0
-P_peak = 1E1   #peak power, 10kW-->1ps pulse, 400mW avg @ 40MHz
+chirp0 = -4
+P_peak = 1E3   #peak power, 10kW-->1ps pulse, 400mW avg @ 40MHz
 pulse.At = np.sqrt(P_peak)*(
             np.exp(-((1+1j*chirp0)/(2*T0**2))*pulse.time**(2*mshape)))
-'''
-folder = ('/Users/cpkmanchee/Documents/Code/Code Output/'
-            'beamtools/beamtools/dev/nalmoscillator_output/20180208nalmoscillator-36/')
-cavity_file= '20180208-200922-36cavity005.pkl'
-pulse = upp.load_obj(folder+cavity_file)
+
+#folder = ('/Users/cpkmanchee/Documents/Code/Code Output/'
+#            'beamtools/beamtools/dev/nalmoscillator_output/20180208nalmoscillator-36/')
+#cavity_file= '20180208-200922-36cavity005.pkl'
+#pulse = upp.load_obj(folder+cavity_file)
 
 #Define fiber components
-smf1 = upp.Fiber(0.72142857)
+smf1 = upp.Fiber(1.0)
 smf1.alpha = 0.000576
 smf1.beta = np.array([
             0.0251222977, 
@@ -242,12 +217,10 @@ smf1.beta = np.array([
 smf1.gamma = 0.00045
 smf1.core_d = 5.5E-6
 
-smf2 = smf1.copyFiber(length=1.44285714)
-smf3 = smf1.copyFiber(length=5.0)
-
+smf2 = smf1.copyFiber(length=3.0)
 
 #gain fiber, nufern ysf-HI
-ydf1 = upp.FiberGain(0.65, grid_type='rel',z_grid=100)
+ydf1 = upp.FiberGain(0.64, grid_type='rel',z_grid=100)
 ydf1.alpha = 0.00345
 ydf1.beta = np.array([
             0.0251222977, 
@@ -260,13 +233,20 @@ ydf1.lambdas = np.array([0.976,1.030])*1E-6
 ydf1.core_d = 6.0E-6
 ydf1.N = 1.891669E25
 
-ydf2 = ydf1.copyFiber()
-
 #Pump parameters
-pP = 0.15    #pump power, CW
-Rp = 0.5
-p1P = Rp*pP
-p2P = (1-Rp)*pP
+p1P = 0.6    #pump power, CW
 
 #Cavity
-tau_rt = 1/(13.1E6)
+tau_rt = 1/(38.1E6)
+
+#Define grating parameters
+L_g = 0.1
+N_g = 600
+AOI_g = 27
+ref_loss_g = 1-(1-0.3)**4
+
+#Saturable absorber parameters. Mimic 1040-15-500fs from BATOP
+sat_int_sa = 0.08    #uJ/cm**2 = 1E-2 J/m**2
+d_sa = smf1.core_d  #~6um diameter fiber
+mod_depth_sa = 0.08
+loss_sa = 0.07

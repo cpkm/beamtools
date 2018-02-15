@@ -217,7 +217,7 @@ ydf1.N = 1.891669E25
 ydf2 = ydf1.copyFiber()
 
 #Pump parameters
-pP = 0.25    #pump power, CW
+pP = 0.15    #pump power, CW
 Rp = 0.5
 p1P = Rp*pP
 p2P = (1-Rp)*pP
