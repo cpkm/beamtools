@@ -68,7 +68,7 @@ def betas(N, AOI, lambda0,disp_order=5,diff_order=1):
     '''Calculate grating dispersion coefficents symbolically.
     Yeilds beta parameters units (s**n)*(m**-1), n is dispersion order.
     '''
-    orders = disp_order
+    orders = disp_order+1
     m = diff_order
     g = AOI*np.pi/180    #convert AOI into rad
     d = 1E-3/N    #gives grove spacing in m
