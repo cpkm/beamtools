@@ -12,7 +12,7 @@ import sympy as sym
 
 from beamtools.constants import h,c,pi
 
-__all__ = ['numapp','vnum','mfr','ema']
+__all__ = ['numapp','vnum','mfr','mfa']
 
 def f2f():
     return 0
@@ -40,11 +40,16 @@ def vnum(a_core,lambda_0,
 
 def mfr(a_core,v):
     '''Calculate mode radius
+    marcuse = Marcuse calculation
+    pete_corr = Petermann II correction
     '''
-    return a*(0.65+(1.619/v**(3/2))+(2.879/v**6))
+    marcuse = 0.65 + 1.619*v**(-3/2) + 2.879*v**(-6)
+    pete_cor = 0.016 + 1.561*v**(-7)
 
-def ema(w=None, a_core=None, v=None):
-    '''Calculate Effective mode area
+    return a*(marcuse-pett_cor)
+
+def mfa(w=None, a_core=None, v=None):
+    '''Calculate mode field area
     '''
     if w is not None:
         return pi*w**2
