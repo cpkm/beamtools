@@ -91,7 +91,7 @@ def cavity(pulse,auto_z_step=False):
     
     pulse.At = upp.optical_filter(pulse, filter_type='bpf', bandwidth=30E-9, loss=0.06, order=2)
     
-    pulse.At, output_At = upp.coupler_2x2(pulse,None,tap=10)
+    pulse.At, output_At = upp.coupler_2x2(pulse,None,tap=50)
 
     return pulse.At, output_At
 
@@ -234,19 +234,19 @@ ydf1.core_d = 6.0E-6
 ydf1.N = 1.891669E25
 
 #Pump parameters
-p1P = 0.6    #pump power, CW
+p1P = 0.4    #pump power, CW
 
 #Cavity
 tau_rt = 1/(38.1E6)
 
 #Define grating parameters
-L_g = 0.1
+L_g = 0.095
 N_g = 600
 AOI_g = 27
 ref_loss_g = 1-(1-0.3)**4
 
 #Saturable absorber parameters. Mimic 1040-15-500fs from BATOP
-sat_int_sa = 0.08    #uJ/cm**2 = 1E-2 J/m**2
+sat_int_sa = 0.5    #uJ/cm**2 = 1E-2 J/m**2
 d_sa = smf1.core_d  #~6um diameter fiber
 mod_depth_sa = 0.08
 loss_sa = 0.07
