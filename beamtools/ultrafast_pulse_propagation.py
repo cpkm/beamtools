@@ -80,7 +80,7 @@ class Pulse:
         Linear approximation which is OK for even spaced x, which it is (self.time).
         '''
         ph=self.phase()
-        self.dt
+        dt=self.dt
 
         ch=np.array([np.arctan2(np.sin(ph[i+2]-ph[i]),np.cos(ph[i+2]-ph[i]))/(2*dt) for i in range(ph[1:-1].size)])
         ch = np.insert(ch, 0,(ph[1] - ph[0])/dt)
