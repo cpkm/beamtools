@@ -107,10 +107,13 @@ def ac_x2t(position,aoi=15,config='sym'):
         time = (1/c)*position*2*np.cos(aoi*pi/180)
 
     elif config.lower() in alias_dict['asymmetric']:
-        time = (1/c)*position*(1+np.cos(2*aoi*pi/180))
+        time = (1/c)*2*position
+        #time = (1/c)*position*(1+np.cos(2*aoi*pi/180))
 
     else:
         print('Unrecognized configuration. Must be symmetric or asymmetric.')
+        #I think this is a general expression, given stage_angle wrt to mirror normal
+        #time = (1/c)*2*position*np.cos((aoi-stage_angle)*pi/180)
         return position
 
     return time
