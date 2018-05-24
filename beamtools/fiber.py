@@ -77,24 +77,33 @@ def vnum(a_core,lambda0,
     return 2*pi*a_core*na/lambda0
 
 
-def mfr(a_core,v):
+def mfr(a_core,v,p2=True):
     '''Calculate mode radius
     marcuse = Marcuse calculation
     pete_corr = Petermann II correction
     '''
+    if type(v) in ([range,list]):
+        v = [float(i) for i in v]
+    elif type(v).__module__ == np.__name__:
+        v = v.astype(float)
+
     marcuse = 0.65 + 1.619*v**(-3/2) + 2.879*v**(-6)
-    pete_cor = 0.016 + 1.561*v**(-7)
 
-    return a*(marcuse-pett_cor)
+    if p2:
+        pete_cor = 0.016 + 1.561*v**(-7)
+    else:
+        pete_cor = 0
 
-def mfa(w=None, a_core=None, v=None):
+    return a_core*(marcuse-pete_cor)
+
+def mfa(w=None, a_core=None, v=None, p2=True):
     '''Calculate mode field area
     '''
     if w is not None:
         return pi*w**2
 
     elif all([i is not None for i in [a_core,v]]):
-        return pi*mfr(a_core,v)**2
+        return pi*mfr(a_core,v,p2=p2)**2
 
     else:
         raise ValueError('Must provide either mode radius (w) '+

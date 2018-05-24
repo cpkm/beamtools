@@ -91,6 +91,14 @@ file_formats = {
                  'column_units': ['s', 'mV','mV'],
                  'delimiter': ',',
                  },
+            'picoscope_spectrum': 
+                {'alias': ['picoscope_spectrum','pico_spec','pico_scope_spectrum'],
+                 'header_lines': 3,
+                 'number_data_columns': 2,
+                 'column_labels': ['freq','volt'],
+                 'column_units': ['MHz', 'mV'],
+                 'delimiter': ',',
+                 }
 
 
             }
