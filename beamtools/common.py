@@ -9,7 +9,8 @@ Created Fri May 12
 import numpy as np
 from beamtools.file_formats import file_formats
 
-__all__ = ['normalize','rmbg','gaussian','sech2','lorentzian','gaussian2D','rk4','alias_dict']
+__all__ = ['normalize','rmbg','gaussian','sech2','lorentzian',
+            'gaussian2D','rk4','moments','d4sigma','alias_dict']
 
 
 class Func:
@@ -221,6 +222,33 @@ def rk4(f, x, y0, const_args=[], abs_x=False):
         y[i+1] = y[i] + (k1 + 2*k2 + 2*k3 + k4)*dx[i]/6
 
     return y
+
+def moments(x,y):
+    '''calculate 1st and second moments of distribution
+        returns first and second moments
+
+    first moments are averages in each direction
+    second moments are variences in x, y and diagonal
+    '''
+    dx = np.gradient(x)
+
+    A = np.sum(y*dx)
+    
+    #first moments (averages)
+    avgx = np.sum(y*x*dx)/A
+
+    #calculate second moments if required
+
+    sig2x = np.sum(y*(x-avgx)**2*dx)/A
+        
+    return np.array([avgx,sig2x])
+
+def d4sigma(x,y):
+    '''calculate d4sigma width
+    '''
+    [av,sig2] = moments(x,y)
+
+    return 4*(sig2)**(1/2)
 
 
 alias_dict = {
