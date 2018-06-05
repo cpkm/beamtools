@@ -10,7 +10,7 @@ import numpy as np
 from beamtools.file_formats import file_formats
 
 __all__ = ['normalize','rmbg','gaussian','sech2','lorentzian',
-            'gaussian2D','rk4','moments','d4sigma','alias_dict']
+            'gaussian2D','rk4','moments','d4sigma','roi','alias_dict']
 
 
 class Func:
@@ -249,6 +249,15 @@ def d4sigma(x,y):
     [av,sig2] = moments(x,y)
 
     return 4*(sig2)**(1/2)
+
+def roi(x,y,x_lim):
+    '''return subset of x,y arrays
+    '''
+    ind = [np.argmin(np.abs(x-xl)) for xl in x_lim]
+    x_out = x[ind[0]:ind[1]]
+    y_out = y[ind[0]:ind[1]]
+
+    return np.array([x_out,y_out])
 
 
 alias_dict = {
