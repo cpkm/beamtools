@@ -30,13 +30,19 @@ def sellmeier(b_coefs, c_coefs, orders, l0=1.03E-6):
     B = b_coefs
     C = c_coefs*1E-12
     w0 = 2*pi*c/l0
-    beta = np.zeros(orders+1,)
+
+    if np.isscalar(l0):
+        w0=np.array([w0])
+
+    beta = np.zeros((orders+1,len(w0)))
 
     n, w = sym.symbols('n, w')  
-    n = (1 + (B/(1-C*(w/(2*np.pi*c))**2)).sum() )**(1/2)
+    n = (1 + (B/(1-C*(w/(2*pi*c))**2)).sum() )**(1/2)
 
     for i in range(orders+1):
-        beta[i] = (1/c)*(i*sym.diff(n,w,i-1).subs(w,w0) + w0*sym.diff(n,w,i).subs(w,w0))
+        #beta[i] = (1/c)*(i*sym.diff(n,w,i-1).subs(w,w0) + w0*sym.diff(n,w,i).subs(w,w0))
+        bt = (1/c)*(i*sym.diff(n,w,i-1) + w*sym.diff(n,w,i))
+        beta[i] = eval(str(bt),{'w':w0})
 
     return beta
 
@@ -44,9 +50,13 @@ def sellmeier(b_coefs, c_coefs, orders, l0=1.03E-6):
 def ior(b_coefs, c_coefs, l0=1.03E-6):
     '''Calculate index of refraction at given wavelength for Sellmeier coefs.
     '''
+
     B = b_coefs
     C = c_coefs*1E-12
     w0 = 2*pi*c/l0
-    n = (1 + (B/(1-C*(w0/(2*np.pi*c))**2)).sum() )**(1/2)
 
-    return n
+    if np.isscalar(l0):
+        return (1 + (B/(1-C*(w0/(2*pi*c))**2)).sum() )**(1/2)
+ 
+    else:
+        return np.array([(1 + (B/(1-C*(W/(2*pi*c))**2)).sum() )**(1/2) for W in w0])
