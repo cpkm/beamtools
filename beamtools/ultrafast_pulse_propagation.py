@@ -27,8 +27,9 @@ class Pulse:
     .time = time array (s)
     .freq = corresponding angular freq array (rad/s)
     .At = time domain Field, units sqrt(power) i.e. |At|**2 = power
-    .Af = freq domain Field (redundant, removed)
     .lambda0 = central wavelength of pulse
+
+    .getAf() = returns freq domain Field
 
     Note: At should be used as the primary field. Af should only be reference. 
     Any time field is modified it should be stored as At. Then use getAf() to get current freq domain field.

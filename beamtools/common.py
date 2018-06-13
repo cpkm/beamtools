@@ -127,15 +127,17 @@ def rmbg(data, fit=None, form='constant'):
 
 
 
-def gaussian(x,sigma,amp=1,x0=0,const=0,sg=1):
+def gaussian(x,sigma,amp=1,x0=0,const=0,chirp=0,sg=1):
     '''Gaussian distribution.
     x = independent variable
     sigma = sd (width parameter)
     x0 = centre position
     amp = amplitude
     const = y-offset
+    chirp = chirp parameter
+    sg = supergaussian number
     '''
-    return amp*np.exp(-((x-x0)**2/(2*sigma**2))**sg) + const
+    return amp*np.exp(-(1+1j*chirp)*((x-x0)**2/(2*sigma**2))**sg) + const
 
 def sech2(x,sigma,amp=1,x0=0,const=0):
     '''Hyperbolic secant-squared distribution.
