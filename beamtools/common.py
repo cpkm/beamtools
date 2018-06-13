@@ -136,6 +136,8 @@ def gaussian(x,sigma,amp=1,x0=0,const=0,chirp=0,sg=1):
     const = y-offset
     chirp = chirp parameter
     sg = supergaussian number
+
+    Note: can be used for either field or intensity. Be careful of sigma definition.
     '''
     return amp*np.exp(-(1+1j*chirp)*((x-x0)**2/(2*sigma**2))**sg) + const
 
@@ -146,8 +148,23 @@ def sech2(x,sigma,amp=1,x0=0,const=0):
     x0 = centre position
     amp = amplitude
     const = y-offset
+
+    Note: this may be used to represent intensity of sech2 pulse.
     '''
     return amp*(1/np.cosh((x-x0)/sigma))**2 + const
+
+def sech(x,sigma,amp=1,x0=0,const=0,chirp=0):
+    '''Hyperbolic secant distribution.
+    x = independent variable
+    sigma = width parameter
+    x0 = centre position
+    amp = amplitude
+    const = y-offset
+    chirp = chirp parameter
+
+    Note: this may be used to represent electric field of sech2 pulse.
+    '''
+    return amp*(1/np.cosh((x-x0)/sigma))*np.exp(1j*chirp*(x-x0)**2/(2*sigma**2)) + const
 
 def lorentzian(x,sigma,amp=1,x0=0,const=0):
     '''Lorentzian distribution.
