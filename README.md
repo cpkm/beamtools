@@ -30,7 +30,7 @@ A list of file formats can be found in `file_formats.py`. I have already include
 ## `beamtools.pulse` module
 The `beamtools.pulse` module contains many methods for analysing optical pulse. This includes the analysis of spectra and autocorrelation traces.
 
-## `beamtools.ufpp` module
+## `beamtools.upp` module
 The ultrafast pulse propagation module, imported as `beamtools.ufpp` possess numerous methods pertaining to the numerical propogation of ultrafast pulses. This includes nonlinear fiber-optic equations, fiber amplification, and several simulated fiber-optic components. 
 
 ## `beamtools.grating` module
