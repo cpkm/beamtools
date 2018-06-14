@@ -127,7 +127,7 @@ def rmbg(data, fit=None, form='constant'):
 
 
 
-def gaussian(x,sigma,amp=1,x0=0,const=0,chirp=0,sg=1):
+def gaussian(x,sigma,amp=1,x0=0,const=0,chirp=0,sg=1, fr=True):
     '''Gaussian distribution.
     x = independent variable
     sigma = sd (width parameter)
@@ -137,23 +137,42 @@ def gaussian(x,sigma,amp=1,x0=0,const=0,chirp=0,sg=1):
     chirp = chirp parameter
     sg = supergaussian number
 
+    fr =  Force Real
+        - if chirp == 0 and fr the output is cast as real.
+        - used for curve fitting (complex # dont work)
+
     Note: can be used for either field or intensity. Be careful of sigma definition.
     '''
-    return amp*np.exp(-(1+1j*chirp)*((x-x0)**2/(2*sigma**2))**sg) + const
+    f = amp*np.exp(-(1+1j*chirp)*((x-x0)**2/(2*sigma**2))**sg) + const
 
-def sech2(x,sigma,amp=1,x0=0,const=0):
+    if chirp==0 and fr:
+        return np.real(f)
+    else:
+        return f
+
+def sech2(x,sigma,amp=1,x0=0,const=0,chirp=0,fr=True):
     '''Hyperbolic secant-squared distribution.
     x = independent variable
     sigma = width parameter
     x0 = centre position
     amp = amplitude
     const = y-offset
+    chirp = chirp parameter ** check consistency
+
+    fr =  Force Real
+        - if chirp == 0 and fr the output is cast as real.
+        - used for curve fitting (complex # dont work)
 
     Note: this may be used to represent intensity of sech2 pulse.
     '''
-    return amp*(1/np.cosh((x-x0)/sigma))**2 + const
+    f = amp*((1/np.cosh((x-x0)/sigma))**2)*np.exp(1j*chirp*(x-x0)**2/(2*sigma**2)) + const
+    
+    if chirp==0 and fr:
+        return np.real(f)
+    else:
+        return f
 
-def sech(x,sigma,amp=1,x0=0,const=0,chirp=0):
+def sech(x,sigma,amp=1,x0=0,const=0,chirp=0,fr=True):
     '''Hyperbolic secant distribution.
     x = independent variable
     sigma = width parameter
@@ -162,9 +181,18 @@ def sech(x,sigma,amp=1,x0=0,const=0,chirp=0):
     const = y-offset
     chirp = chirp parameter
 
+    fr =  Force Real
+        - if chirp == 0 and fr the output is cast as real.
+        - used for curve fitting (complex # dont work)
+
     Note: this may be used to represent electric field of sech2 pulse.
     '''
-    return amp*(1/np.cosh((x-x0)/sigma))*np.exp(1j*chirp*(x-x0)**2/(2*sigma**2)) + const
+    f = amp*(1/np.cosh((x-x0)/sigma))*np.exp(1j*chirp*(x-x0)**2/(2*sigma**2)) + const
+
+    if chirp==0 and fr:
+        return np.real(f)
+    else:
+        return f
 
 def lorentzian(x,sigma,amp=1,x0=0,const=0):
     '''Lorentzian distribution.
