@@ -28,9 +28,8 @@ start_time = datetime.now().strftime("%H%M%S")
 
 #output_folder is outside of git repository in: code_folder/Code Output/...
 #if file is in code_folder/X/Y/Z, results are in code_folder/Code Output/X/Y/Z
-code_folder = '/Users/cpkmanchee/Documents/Code'
-output_folder = (code_folder + '/Code Output' 
-                + os.path.dirname(__file__).split(code_folder)[-1] + '/' 
+code_folder = '/Users/cpkmanchee/Google Drive/PhD/Data/2018-03-27 NALM oscillator sims'
+output_folder = (code_folder + '/' 
                 + os.path.splitext(os.path.basename(__file__))[0] + '_output')
 
 if not os.path.exists(output_folder):
