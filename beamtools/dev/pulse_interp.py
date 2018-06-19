@@ -16,14 +16,13 @@ save_plt = False
 
 dpi=600
 
-wlim = [1010,1060]
+wlim = [1000,1100]
 
-spectrum_file = '/Users/cpkmanchee/Google Drive/PhD/Data/2017-12-13 Rod power output/'
-file_pre =  source_dir+'spectra/'+'20171213-rod_'
-ext = '.csv'
+spec_file = '/Users/cpkmanchee/Documents/Code/beamtools/beamtools/dev/test data/pulse_interp/20180103-004-000.csv'
+ac_file = '/Users/cpkmanchee/Documents/Code/beamtools/beamtools/dev/test data/pulse_interp/20180103-004-000ac001.txt'
 
-files = ['40W','60W','100W','120W','160W','180W','220W']
-
+sp = bt.import_data_file(spec_file, 'oo_spec')
+ac = bt.import_data_file(ac_file, 'bt_ac')
 
 plot_grid = [1,1]
 plot_w = 4.50
@@ -35,19 +34,6 @@ gs = GridSpec(plot_grid[0], plot_grid[1])
 
 ax1 = fig.add_subplot(gs[0,0])
 
-cmap = LinearSegmentedColormap.from_list('viridis_half',plt.cm.viridis(np.linspace(0.25,.75,256)))
-N=len(files)
-
-for i,f in enumerate(files):
-    file = file_pre+f+ext
-    spec = bt.import_data_file(file, 'oo_spec')
-    spcr,intr = roi(spec.wavelength, spec.intensity,wlim)
-    intr = bt.normalize(intr, method='area')
-    a,v = bt.moments(spcr,intr)
-    s = v**(1/2)
-    ax1.plot(spcr, intr+.03*i, '-', c=cmap(i/(N-1)))
-    ax1.annotate('{:.0f} nm\n{:.1f} nm'.format(a,4*s), xy=(1050,i*0.03+.002),
-           va = "bottom", ha="left", fontsize = 'small')
 
 ax1.set_xlabel('Wavelength (nm)')
 ax1.set_ylabel('Intensity (arb.)')
