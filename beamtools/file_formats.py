@@ -98,7 +98,13 @@ file_formats = {
                  'column_labels': ['freq','volt'],
                  'column_units': ['MHz', 'mV'],
                  'delimiter': ',',
+                 },
+            'bt_crosssection': 
+                {'alias': ['bt_crosssection','bt_cs','crosssection'],
+                 'header_lines': 7,
+                 'number_data_columns': 3,
+                 'column_labels': ['wavelength','absorption','emission'],
+                 'column_units': ['m','m**2','m**2'],
+                 'delimiter': ',',
                  }
-
-
             }

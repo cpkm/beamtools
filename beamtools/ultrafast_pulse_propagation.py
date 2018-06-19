@@ -44,6 +44,7 @@ class Pulse:
         self.freq = None
         self.At = None
         self.lambda0 = lambda0
+        self.freq_dep = None
 
     def initializeGrid(self, t_bit_res=T_BIT_DEFAULT, t_window=T_WIN_DEFAULT):
         nt = 2**t_bit_res    #number of time steps, power of 2 for FFT
@@ -59,10 +60,13 @@ class Pulse:
         '''
         return ((self.dt*self.nt)/(np.sqrt(2*np.pi)))*np.fft.ifft(self.At)
 
-    def getPt(self):
+    def getPt(self,t0=False):
         '''Return Power, time domain.
         '''
-        return np.abs(self.At)**2
+        pt = np.abs(self.At)**2
+        if t0:
+            pt = np.interp(self.time,self.time-self.time[np.argmax(pt)],pt)
+        return pt
 
     def getPf(self):
         '''Return Pf, power spectral density.
@@ -88,6 +92,10 @@ class Pulse:
         ch = np.insert(ch,-1,(ph[-1]-ph[-2])/dt)
 
         return ch
+
+    def shift_t0(self):
+        '''shift_t0 to maximum position'''
+        self.At = np.interp(self.time,self.time-self.time[np.argmax(self.getPt())],self.At)
 
 
     def copyPulse(self, new_At=None):
@@ -404,6 +412,12 @@ def propagate_fiber (pulse, fiber, autodz=False):
     #combined loss and gain, will be array same dim as fiber.z
     #fiber.alpha could be const. or array, result is same dimensionally
     alpha = (fiber.alpha - gain)
+
+    try:
+        if np.shape(pulse.freq_dep) == np.shape(pulse.freq):
+            alpha = np.outer(alpha,pulse.freq_dep)
+    except:
+        print('freq_dep failed')
 
     #Define Dispersion operator: D = G + B, G = gain/loss, B = dispersion
     G = -alpha/2 + 0j*alpha
@@ -746,6 +760,26 @@ def saturable_abs(pulse,sat_int,spot_size,mod_depth=1,loss=0):
     outputField = np.sqrt(1-loss)*pulse.At*np.sqrt((1-mod_depth/(1+intensity/sat_int)))
 
     return outputField
+
+
+def interp_gain_freq(pulse,cs):
+    '''
+    Interpolate crosssection data onto frequency array of pulse
+    pulse = Pulse() object
+    cs = crosssection data object
+    '''
+    p_wl = 2*pi*c/(pulse.freq + 2*pi*c/pulse.lambda0)
+    cs_scale = (cs.emission - cs.absorption)/(np.max(cs.emission - cs.absorption))
+    
+    return np.interp(p_wl,cs.wavelength,cs_scale)
+
+
+def shift_t0(pulse):
+    '''Shift T0 to center of pulse
+    '''
+    t0 = pulse.time[np.argmax(pulse.getPt())]
+    return np.interp(pulse.time,pulse.time-t0,pulse.At)
+
 
 
 
