@@ -85,8 +85,8 @@ def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_int
     #i = (np.abs(nui-nu0)).argmin()     #centre freq index
 
     #perform FT-1, remove centre spike
-    t = np.fft.ifftshift(np.fft.fftfreq(n,df)[1:-1])
-    Et =np.fft.ifftshift((np.fft.ifft(np.fft.ifftshift(Ew)))[1:-1])
+    t = np.fft.fftshift(np.fft.fftfreq(n,df)[1:-1])
+    Et = np.fft.fftshift((np.fft.ifft(np.fft.ifftshift(Ew)))[1:-1])
 
     output_dict = {'time': t, 'et': Et, 'nu': nui, 'ew': Ew}
     output = DataObj(output_dict)

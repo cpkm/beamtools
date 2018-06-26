@@ -58,10 +58,11 @@ class Pulse:
     def getAf(self):
         '''Return Af, spectral field.
         '''
-        return ((self.dt*self.nt)/(np.sqrt(2*np.pi)))*np.fft.ifft(self.At)
+        return ((self.dt*self.nt)/(np.sqrt(2*np.pi)))*np.fft.fft(self.At)
 
     def getPt(self,t0=False):
         '''Return Power, time domain.
+        t0 - True = center pulse about maximum
         '''
         pt = np.abs(self.At)**2
         if t0:
@@ -97,6 +98,10 @@ class Pulse:
         '''shift_t0 to maximum position'''
         self.At = np.interp(self.time,self.time-self.time[np.argmax(self.getPt())],self.At)
 
+    def tl_Pt(self):
+        '''calculate transform limited pulse
+        '''
+        return np.abs(np.fft.fftshift(np.fft.ifft((self.getPf)**(1/2))))**2
 
     def copyPulse(self, new_At=None):
         '''Duplicates pulse, outputs new pulse instance.
@@ -436,15 +441,15 @@ def propagate_fiber (pulse, fiber, autodz=False):
         
         D = G[i] + B
        
-        Af = np.fft.ifft(At)
+        Af = np.fft.fft(At)
         Af = Af*np.exp(D*dz[i])
-        At = np.fft.fft(Af)
+        At = np.fft.ifft(Af)
         At = At*np.exp(N*dz[i]*np.abs(At)**2)
 
     #Final Propagation steps
-    Af = np.fft.ifft(At)
+    Af = np.fft.fft(At)
     Af = Af*np.exp(D[-1]*dz[-1])
-    At = np.fft.fft(Af)
+    At = np.fft.ifft(Af)
     outputField = At*np.exp(np.abs(At)**2*N*dz[-1]/2)
     
     return outputField
@@ -621,7 +626,7 @@ def grating_pair(pulse, L, N, AOI, loss=0, return_coef=False):
     g = AOI*np.pi/180    #convert AOI into rad
     d = 1E-3/N    #gives grove spacing in m
 
-    Af = np.fft.ifft(pulse.At)
+    Af = np.fft.fft(pulse.At)
     w0 = 2*np.pi*c/pulse.lambda0
     omega = pulse.freq
     theta = np.arcsin(m*2*np.pi*c/(w0*d) - np.sin(g)) 
@@ -630,7 +635,7 @@ def grating_pair(pulse, L, N, AOI, loss=0, return_coef=False):
     phi3 = (-3*phi2/w0)*(1+(2*np.pi*c*m*np.sin(theta)/(w0*d*np.cos(theta)**2)))
     phi4 = ((2*phi3)**2/(3*phi2)) + phi2*(2*np.pi*c*m/(w0**2*d*np.cos(theta)**2))**2
 
-    output_At = np.sqrt(1-loss)*np.fft.fft(Af*np.exp(1j*(phi2*(omega)**2/2 + phi3*(omega)**3/6 + phi4*(omega)**4/24)))
+    output_At = np.sqrt(1-loss)*np.fft.ifft(Af*np.exp(1j*(phi2*(omega)**2/2 + phi3*(omega)**3/6 + phi4*(omega)**4/24)))
     
     if return_coef:
         return output_At, np.array([phi2,phi3,phi4])
@@ -703,7 +708,7 @@ def optical_filter(pulse, filter_type, lambda0=None, bandwidth=2E-9, loss=0, ord
     w0 is central freq (ang) of FILTER
     '''
     
-    Af = np.fft.ifft(pulse.At)
+    Af = np.fft.fft(pulse.At)
     
     if lambda0 == None:
         lambda0 = pulse.lambda0
@@ -740,7 +745,7 @@ def optical_filter(pulse, filter_type, lambda0=None, bandwidth=2E-9, loss=0, ord
         '''
         filter_profile = np.ones(np.shape(w))
         
-    output_At = np.sqrt(1-loss)*np.fft.fft(Af*filter_profile)
+    output_At = np.sqrt(1-loss)*np.fft.ifft(Af*filter_profile)
 
     return output_At
 
