@@ -8,6 +8,7 @@ import numpy as np
 import os
 import csv
 import pickle
+import warnings
 
 from beamtools.file_formats import file_formats
 from beamtools.common import DataObj
@@ -65,14 +66,28 @@ def import_data_file(file, given_filetype):
         [[(output[c].append(row[c_ind].strip())) for c_ind,c in enumerate(column_labels)] for row in data]
 
     #convert data to float
+    v = []
     for c in output.keys():
         try:
             output[c] = np.asarray(output[c],dtype=np.float)
+            v.append(~np.isnan(output[c]))
+
         except ValueError:
+            warnings.warn('Unable to convert to float')
             try:
                 output[c] = np.asarray(output[c])
             except ValueError:
-                pass
+                warning.warn('Unable to cast as array')
+                
+    #nan correction
+    try:
+        v = np.asarray(v)
+        if not (v.size == 0):
+            valid = np.prod(v,0).astype(bool)
+            for c in output.keys():
+                output[c] = output[c][valid]
+    except:
+        warnings.warn('Nan processing failure')
 
     output.update({'header': header})
     output.update({'filetype': filetype})

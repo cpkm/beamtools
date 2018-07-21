@@ -86,9 +86,11 @@ def spectrumFT(data,from_file = False, file_type='oo_spec', units_wl='nm', n_int
 
     #perform FT-1, remove centre spike
     t = np.fft.fftshift(np.fft.fftfreq(n,df)[1:-1])
+    ti = np.fft.fftshift(np.fft.fftfreq(n,df))
     Et = np.fft.fftshift((np.fft.ifft(np.fft.ifftshift(Ew)))[1:-1])
+    Eti = np.interp(ti,t,Et)
 
-    output_dict = {'time': t, 'et': Et, 'nu': nui, 'ew': Ew}
+    output_dict = {'time': ti, 'et': Eti, 'nu': nui, 'ew': Ew}
     output = DataObj(output_dict)
 
     return output, imported_data
@@ -226,7 +228,8 @@ def fit_ac(data, from_file = False, file_type='bt_ac', form='all', bgform = 'con
    
     if fitGaus:
         try:
-            poptGaus,pcovGaus = curve_fit(fitfuncGaus,x,y,p0) 
+            valid = ~(np.isnan(x) | np.isnan(y))
+            poptGaus,pcovGaus = curve_fit(fitfuncGaus,x[valid],y[valid],p0) 
         except RuntimeError:
             poptGaus = np.zeros(nFitArgs)
             pcovGaus = np.zeros((nFitArgs,nFitArgs))   
@@ -238,7 +241,8 @@ def fit_ac(data, from_file = False, file_type='bt_ac', form='all', bgform = 'con
         
     if fitSech2:
         try:
-            poptSech2,pcovSech2 = curve_fit(fitfuncSech2,x,y,p0)
+            valid = ~(np.isnan(x) | np.isnan(y))
+            poptSech2,pcovSech2 = curve_fit(fitfuncSech2,x[valid],y[valid],p0)
         except RuntimeError:
             poptSech2 = np.zeros(nFitArgs)
             pcovSech2 = np.zeros((nFitArgs,nFitArgs))
@@ -247,6 +251,9 @@ def fit_ac(data, from_file = False, file_type='bt_ac', form='all', bgform = 'con
         pcov.append(pcovSech2)
         fit_results.append(FitResult(ffunc=fitfuncSech2, ftype='sech2',
             popt=poptSech2, pcov=pcovSech2, indep_var='time', bgform=bgform))
+
+    if len(fit_results) == 1:
+        fit_results = fit_results[0]
 
     return fit_results, imported_data
 
