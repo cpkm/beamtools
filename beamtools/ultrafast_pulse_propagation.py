@@ -39,12 +39,15 @@ class Pulse:
     T_BIT_DEFAULT = 12      #default time resolution, 2^12
     T_WIN_DEFAULT = 20E-12  #default window size, 20ps
 
-    def __init__(self, lambda0=1.030E-6):
+    def __init__(self, lambda0=1.030E-6, ig=False):
         self.time = None
         self.freq = None
         self.At = None
         self.lambda0 = lambda0
         self.freq_dep = None
+
+        if ig:
+            self.initializeGrid()
 
     def initializeGrid(self, t_bit_res=T_BIT_DEFAULT, t_window=T_WIN_DEFAULT):
         nt = 2**t_bit_res    #number of time steps, power of 2 for FFT
