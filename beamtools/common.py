@@ -9,7 +9,7 @@ Created Fri May 12
 import numpy as np
 from beamtools.file_formats import file_formats
 
-__all__ = ['normalize','rmbg','gaussian','sech2','lorentzian',
+__all__ = ['saveObj','loadObj','normalize','rmbg','gaussian','sech2','lorentzian',
             'gaussian2D','rk4','moments','d4sigma','roi','alias_dict']
 
 
@@ -53,6 +53,16 @@ class DataObj(dict):
         [print(k,v) for k,v in file_formats[self.filetype].items()]
         return
 
+
+def saveObj(obj, filename):
+    with open(filename, 'wb') as output:
+        dill.dump(obj, output, -1)
+
+def loadObj(filename):
+    with open(filename, 'rb') as input:
+        obj = dill.load(input)
+
+    return obj
 
 def normalize(f, offset=0, method='normal'):
     '''Normalize array of data. Optional offset.
