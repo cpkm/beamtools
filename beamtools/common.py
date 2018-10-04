@@ -8,6 +8,7 @@ Created Fri May 12
 
 import numpy as np
 from beamtools.file_formats import file_formats
+import dill
 
 __all__ = ['saveObj','loadObj','normalize','rmbg','gaussian','sech2','lorentzian',
             'gaussian2D','rk4','moments','d4sigma','roi','alias_dict']

@@ -82,7 +82,7 @@ class Pulse:
         return np.angle(self.At)
 
     def chirp(self):
-        '''return chirp
+        '''return chirp actually inst freq.
         time derivative of phase
         Need to manually calc differences due to np.gradient causing spikes.
         Spikes occur when phase angle flips from +/-. Gradient gives wrong 'quadrant'.
