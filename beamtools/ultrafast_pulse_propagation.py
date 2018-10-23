@@ -439,7 +439,7 @@ def propagate_fiber (pulse, fiber, autodz=False):
     N = 1j*fiber.gamma
     
     #Main propagation loop
-    At = pulse.At*np.exp(np.abs(pulse.At)**2*N*dz[0]/2)
+    At = pulse.At*np.exp(-np.abs(pulse.At)**2*N*dz[0]/2)
     for i in tqdm(range(nz-1),desc='Progagate Fiber',leave=False):
         
         D = G[i] + B
