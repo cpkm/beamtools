@@ -169,17 +169,15 @@ class Fiber:
             if z_grid == None:
                 z_grid = self.Z_STP_DEFAULT 
 
-            nz = np.max([2,self.length//z_grid])
-            z_grid = self.length/nz
-            self.z = z_grid*np.arange(0, nz)    #position array
+            nz = np.max([1,np.round(self.length/np.abs(z_grid))]) + 1
+            self.z = np.linspace(0, self.length, nz)    #position array
 
         else:
             # grid type is 'relative', z_grid is number of grid points
             if z_grid == None or z_grid < 1:
                 z_grid = self.Z_NUM_DEFAULT
 
-            dz = self.length/z_grid   #position step size
-            self.z = dz*np.arange(0, z_grid)    #position array
+            self.z = np.linspace(0, self.length, z_grid)    #position array
 
     def copyFiber(self, length=None):
         '''Duplicates Fiber, outputs new fiber instance.
@@ -252,6 +250,7 @@ class FiberGain:
         -sets up the z-axis array for the fiber
         -can be called and re-called at any time (even after creation)
         -must provide fiber length, self.length is redefined when initializeGrid is called
+        -also initializes gain array
         '''
         self.length = length
         old_z = self.z
@@ -261,17 +260,15 @@ class FiberGain:
             if z_grid == None:
                 z_grid = self.Z_STP_DEFAULT 
 
-            nz = np.max([2,self.length//z_grid])
-            z_grid = self.length/nz
-            self.z = z_grid*np.arange(0, nz)    #position array
+            nz = np.max([1,np.round(self.length/np.abs(z_grid))]) + 1
+            self.z = np.linspace(0, self.length, nz)    #position array
 
         else:
             # grid type is 'relative', z_grid is number of grid points
             if z_grid == None or z_grid < 1:
                 z_grid = self.Z_NUM_DEFAULT
 
-            dz = self.length/z_grid   #position step size
-            self.z = dz*np.arange(0, z_grid)    #position array
+            self.z = np.linspace(0, self.length, z_grid)    #position array
 
         if np.size(self.gain) is 1:
             self.gain = self.gain*np.ones(np.size(self.z))
