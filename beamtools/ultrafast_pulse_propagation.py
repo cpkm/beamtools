@@ -143,7 +143,7 @@ class Fiber:
     CORE_D_DEFAULT = 6E-6    #default core diameter, 6um
     CLAD_D_DEFAULT = 125E-6  #default clad diameter, 125um
 
-    def __init__(self, length=0, grid_type='abs', z_grid=None, alpha=0, beta=np.array([0,0,0]), gamma=0):
+    def __init__(self, length=0, grid_type='rel', z_grid=None, alpha=0, beta=np.array([0,0,0]), gamma=0):
 
         self.length = length
         self.alpha = alpha
@@ -155,7 +155,7 @@ class Fiber:
 
         self.initializeGrid(self.length, grid_type, z_grid)
 
-    def initializeGrid(self, length, grid_type='abs', z_grid=None):
+    def initializeGrid(self, length, grid_type='rel', z_grid=None):
         '''
         -sets up the z-axis array for the fiber
         -can be called and re-called at any time (even after creation)
@@ -406,8 +406,9 @@ def propagate_fiber (pulse, fiber, autodz=False):
     omega = pulse.freq
 
     #fiber inputs
-    nz = np.size(fiber.z)
-    dz = np.gradient(fiber.z)   #position step size
+    #nz = np.size(fiber.z)
+    dz = np.diff(fiber.z)   #position step size
+    ndz= np.size(dz)        #ndz*dz[i] = fiber length (constant dz)
 
     #compile losses(alpha) and gain appropriately, result should have same dim as fiber.z
     if type(fiber) is Fiber:
@@ -444,7 +445,7 @@ def propagate_fiber (pulse, fiber, autodz=False):
     
     #Main propagation loop
     At = pulse.At*np.exp(-np.abs(pulse.At)**2*N*dz[0]/2)
-    for i in tqdm(range(nz-1),desc='Progagate Fiber',leave=False):
+    for i in tqdm(range(ndz),desc='Progagate Fiber',leave=False):
         
         D = G[i] + B
        
@@ -537,12 +538,12 @@ def calc_gain(fiber, Pp, Ps,
 
     g = np.zeros(np.shape(fiber.z))
     N=fiber.N
-    dz = np.gradient(fiber.z)
+    dz = np.diff(fiber.z)
 
 
     if method.lower() in {'simple', 's'}:
     #simple integration for intensities and n
-        for i in tqdm(range(np.size(g)),desc='Calculate Gain',leave=False):
+        for i in tqdm(range(np.size(dz)),desc='Calculate Gain',leave=False):
 
             n = (a_p*Ip + a_s*Is)/(b_p*Ip + b_s*Is + 1/tau_se)
             
@@ -604,7 +605,7 @@ def calc_gain(fiber, Pp, Ps,
             loop_num = loop_num + 1
             
 
-        print(gain_err, loop_num)
+        #print(gain_err, loop_num)
         
 
     else:
