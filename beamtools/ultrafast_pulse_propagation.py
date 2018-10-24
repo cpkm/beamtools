@@ -138,7 +138,7 @@ class Fiber:
 
     '''
     Z_STP_DEFAULT = 0.003  #default grid size, in m, 3mm
-    Z_NUM_DEFAULT = 300     #default number of grid points, 300
+    Z_NUM_DEFAULT = 256     #default number of grid points, 300
 
     CORE_D_DEFAULT = 6E-6    #default core diameter, 6um
     CLAD_D_DEFAULT = 125E-6  #default clad diameter, 125um
@@ -217,7 +217,7 @@ class FiberGain:
     '''
 
     Z_STP_DEFAULT = 0.003  #default grid size, in m
-    Z_NUM_DEFAULT = 300     #default number of grid points
+    Z_NUM_DEFAULT = 256     #default number of grid points
 
     CORE_D_DEFAULT = 6E-6    #default core diameter, 6um
     CLAD_D_DEFAULT = 125E-6  #default clad diameter, 125um
@@ -270,6 +270,12 @@ class FiberGain:
 
             self.z = np.linspace(0, self.length, z_grid)    #position array
 
+        self.updateGain(old_z)
+
+
+    def updateGain(self, old_z):
+        '''Update gain array
+        '''
         if np.size(self.gain) is 1:
             self.gain = self.gain*np.ones(np.size(self.z))
         elif np.size(self.gain) is np.size(old_z):
@@ -280,6 +286,7 @@ class FiberGain:
             self.gain = np.interp(self.z,old_z,self.gain[:np.size(old_z)])
         else:
             self.gain = np.zeros(np.size(self.z))
+
 
     def copyFiber(self, length=None):
         '''Duplicates Fiber, outputs new fiber instance.
