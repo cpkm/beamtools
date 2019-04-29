@@ -5,7 +5,7 @@ Summary: A suite of tools for the analysis of optical beams
 Home-page: https://github.com/cpkm/beamtools
 Author: Kyle Manchee
 Author-email: cpkmanchee@gmail.com
-License: UNKNOWN
+License: MIT
 Download-URL: https://github.com/cpkm/beamtools/archive/v0.4.tar.gz
 Description: UNKNOWN
 Keywords: optics,analysis,beams,spectrum

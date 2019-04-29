@@ -1,3 +1,4 @@
+README.md
 setup.cfg
 setup.py
 beamtools/__init__.py
@@ -5,13 +6,11 @@ beamtools/beam_profile.py
 beamtools/common.py
 beamtools/constants.py
 beamtools/diffraction_grating_pair.py
+beamtools/fiber.py
 beamtools/file_formats.py
 beamtools/import_data_file.py
-beamtools/prism_pair.py
 beamtools/pulse.py
 beamtools/sellmeier_dispersion.py
-beamtools/spectrum_integrate.py
-beamtools/tests.py
 beamtools/ultrafast_pulse_propagation.py
 beamtools.egg-info/PKG-INFO
 beamtools.egg-info/SOURCES.txt

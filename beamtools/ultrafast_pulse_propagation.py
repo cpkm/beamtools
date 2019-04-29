@@ -83,7 +83,7 @@ class Pulse:
 
     def chirp(self):
         '''return chirp actually inst freq.
-        time derivative of phase
+        (-)time derivative of phase
         Need to manually calc differences due to np.gradient causing spikes.
         Spikes occur when phase angle flips from +/-. Gradient gives wrong 'quadrant'.
         Linear approximation which is OK for even spaced x, which it is (self.time).
@@ -95,7 +95,7 @@ class Pulse:
         ch = np.insert(ch, 0,(ph[1] - ph[0])/dt)
         ch = np.insert(ch,-1,(ph[-1]-ph[-2])/dt)
 
-        return ch
+        return -ch
 
     def shift_t0(self):
         '''shift_t0 to maximum position'''
